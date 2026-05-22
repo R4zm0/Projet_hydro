@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-
+#j'aime bcp seline
 
 def plan(x, y):
     return 0.07*(x - 50) + 0.1*(y - 50)
