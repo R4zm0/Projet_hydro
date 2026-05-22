@@ -14,7 +14,7 @@ def plateau(x, y):
 
 def sinc_card(x, y):
     d = np.sqrt((x - 40)**2 + (y - 50)**2)
-    return np.where(d == 0, 10.0, 10 * np.sin(0.1*d) / (0.1*d))  # ✅ corrigé
+    return np.where(d == 0, 10.0, 10 * np.sin(0.1*d) / (0.1*d))  
 
 def double_sin(x, y):
     return 5*np.sin(x/10 + 3*np.sin(y/20)) + 2*np.sin(y/5)
