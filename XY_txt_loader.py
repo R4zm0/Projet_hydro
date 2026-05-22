@@ -15,8 +15,7 @@ y = np.arange(0, N_Taille_Grid)
 X, Y = np.meshgrid(x, y)
 
 
-manouvellevariable = "caca"
-
+manouvellevariable = "test de branch"
 mnt = np.loadtxt('txt/double_sin.txt')
 
 fig = plt.figure()
