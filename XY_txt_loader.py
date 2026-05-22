@@ -15,9 +15,9 @@ y = np.arange(0, N_Taille_Grid)
 X, Y = np.meshgrid(x, y)
 
 
+manouvellevariable = "caca"
 
 mnt = np.loadtxt('txt/double_sin.txt')
-
 
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
