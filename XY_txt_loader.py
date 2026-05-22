@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import visualisation as vis
 
 # truc à changer 
 N_Taille_Grid = 101
@@ -18,16 +19,8 @@ X, Y = np.meshgrid(x, y)
 manouvellevariable = "test de branch"
 mnt = np.loadtxt('txt/double_sin.txt')
 
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-col = plt.get_cmap('gist_earth')(mnt)
 
-
-ax.plot_surface(X, Y, mnt, cmap = 'viridis')
-ax.contour(X, Y, mnt, zdir='z', offset=np.min(mnt), cmap='viridis')
-
-
-print(f"Stats du fichier : moy{np.average(mnt)}, min : {np.min(mnt)}, max : {np.max(mnt)}, ecartype : {np.std(mnt, ddof=1)}")
+vis.afficher_2D(X, Y, mnt, title="double sin double monstre", Zname="Altitude [m]", niveaux=True, n_levels=5, cotes=True, cmap="viridis")
 plt.show()
 
 
