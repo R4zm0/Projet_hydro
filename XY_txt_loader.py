@@ -19,14 +19,13 @@ X, Y = np.meshgrid(x, y)
 
 manouvellevariable = "test de branch"
 mnt = np.loadtxt('txt/double_sin.txt')
+Z = mnt
 
-Z = ft.double_sin(X, Y)
 G, coeffs = pente.gradient_evans(Z)
 print("shape de G : ", G.shape)
 print(G)
 
 figure, sinusplot = vis.afficher_2D(X, Y, Z, title="double sin double monstre", Zname="Altitude [m]", niveaux=True, n_levels=5, cotes=True, cmap="viridis")
-
 sinusplot = vis.afficher_gradient(X, Y, G, ax=sinusplot, step=5, color="red", scale=20)
 plt.show()
 
