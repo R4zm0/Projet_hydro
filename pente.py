@@ -5,11 +5,11 @@ from scipy.ndimage import convolve, generic_filter, gaussian_filter
 # Utils
 # =========================
 
-def _safe_gradient_norm(fx, fy):
-    return np.sqrt(fx**2 + fy**2)
+def _safe_gradient_norm(Gx, Gy):
+    return np.sqrt(Gx**2 + Gy**2)
 
-def _aspect(fx, fy):
-    return np.arctan2(-fx, -fy)
+def _aspect(Gx, Gy):
+    return np.arctan2(-Gx, -Gy)
 
 
 # =========================
@@ -58,14 +58,6 @@ def gradient_evans(Z, s=1.0):
     return np.stack([Gx, Gy], axis=-1), coeffs
 
 
-# =========================
-# 2. PENTE + EXPOSITION
-# =========================
-
-def slope_aspect(fx, fy):
-    slope = _safe_gradient_norm(fx, fy)
-    aspect = _aspect(fx, fy)
-    return slope, aspect
 
 
 # =========================
