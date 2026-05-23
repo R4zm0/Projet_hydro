@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import visualisation as vis
 import fonction_theoriques as ft
+import pente as pente
 # truc à changer 
 N_Taille_Grid = 101
 
@@ -19,8 +20,14 @@ X, Y = np.meshgrid(x, y)
 manouvellevariable = "test de branch"
 mnt = np.loadtxt('txt/double_sin.txt')
 
+Z = ft.double_sin(X, Y)
+G, coeffs = pente.gradient_evans(Z)
+print("shape de G : ", G.shape)
+print(G)
 
-vis.afficher_2D(X, Y, mnt, title="double sin double monstre", Zname="Altitude [m]", niveaux=True, n_levels=5, cotes=True, cmap="viridis")
+figure, sinusplot = vis.afficher_2D(X, Y, Z, title="double sin double monstre", Zname="Altitude [m]", niveaux=True, n_levels=5, cotes=True, cmap="viridis")
+
+sinusplot = vis.afficher_gradient(X, Y, G, ax=sinusplot, step=5, color="red", scale=20)
 plt.show()
 
 

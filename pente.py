@@ -16,41 +16,46 @@ def _aspect(fx, fy):
 # 1. GRADIENTS
 # =========================
 
-def gradient_tpp(z, dx=1.0, dy=1.0):
+def gradient_tpp(Z, dx=1.0, dy=1.0):
     """Three Points Plane (TPP)"""
-    fx = (np.roll(z, -1, axis=1) - z) / dx
-    fy = (np.roll(z, -1, axis=0) - z) / dy
-    return fx[:-1, :-1], fy[:-1, :-1]
+    Z_pad = np.pad(Z, 1, mode='edge')
+    Gx = (np.roll(Z_pad, -1, axis=1) - Z_pad) / dx
+    Gy = (np.roll(Z_pad, -1, axis=0) - Z_pad) / dy
+    return np.stack([Gx[1:-1, 1:-1], Gy[1:-1, 1:-1]], axis=-1)
 
 
-def gradient_fcn(z, dx=1.0, dy=1.0):
+def gradient_fcn(Z, dx=1.0, dy=1.0):
     """Four Closest Neighbours (FCN)"""
-    fx = (np.roll(z, -1, axis=1) - np.roll(z, 1, axis=1)) / (2 * dx)
-    fy = (np.roll(z, -1, axis=0) - np.roll(z, 1, axis=0)) / (2 * dy)
-    return fx[1:-1, 1:-1], fy[1:-1, 1:-1]
+    Z_pad = np.pad(Z, 1, mode='edge')          # (N+2, M+2)
+    print("shape de roll-1 : ", np.roll(Z_pad, -1, axis=1).shape)
+    print("shape de roll+1 : ", np.roll(Z_pad, 1, axis=1).shape)
+    Gx = (np.roll(Z_pad, -1, axis=1) - np.roll(Z_pad, 1, axis=1)) / (2 * dx)
+    Gy = (np.roll(Z_pad, -1, axis=0) - np.roll(Z_pad, 1, axis=0)) / (2 * dy)
 
+    return np.stack([Gx[1:-1, 1:-1], Gy[1:-1, 1:-1]], axis=-1)  # → (N, M, 2)
 
-def gradient_evans(z, s=1.0):
-    """Evans polynomial fit (returns fx, fy + coeffs)"""
+def gradient_evans(Z, s=1.0):
+    """Evans polynomial fit"""
 
-    def compute_coeffs(window):
-        z1,z2,z3,z4,z5,z6,z7,z8,z9 = window
+    def make_coeff(idx):
+        def compute(window):
+            z1,z2,z3,z4,z5,z6,z7,z8,z9 = window
+            A = (z1+z3+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
+            B = (z1+z2+z3+z7+z8+z9)/(6*s**2) - (z4+z5+z6)/(3*s**2)
+            C = (z3+z7-z1-z9)/(4*s**2)
+            D = (z3+z6+z9-z1-z4-z7)/(6*s**2)
+            E = (z1+z2+z3-z7-z8-z9)/(6*s**2)
+            return [A, B, C, D, E][idx]
+        return compute
 
-        A = (z1+z3+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
-        B = (z1+z2+z3+z7+z8+z9)/(6*s**2) - (z4+z5+z6)/(3*s**2)
-        C = (z3+z7-z1-z9)/(4*s**2)
-        D = (z3+z6+z9-z1-z4-z7)/(6*s**2)
-        E = (z1+z2+z3-z7-z8-z9)/(6*s**2)
+    A = generic_filter(Z, make_coeff(0), size=(3,3), mode='nearest')
+    B = generic_filter(Z, make_coeff(1), size=(3,3), mode='nearest')
+    C = generic_filter(Z, make_coeff(2), size=(3,3), mode='nearest')
+    Gx = generic_filter(Z, make_coeff(3), size=(3,3), mode='nearest')
+    Gy = -generic_filter(Z, make_coeff(4), size=(3,3), mode='nearest')
 
-        return np.array([A,B,C,D,E])
-
-    coeffs = generic_filter(z, compute_coeffs, size=(3,3), mode='nearest')
-    coeffs = coeffs.reshape(z.shape + (5,))
-
-    D = coeffs[...,3]
-    E = coeffs[...,4]
-
-    return D[1:-1,1:-1], E[1:-1,1:-1], coeffs
+    coeffs = np.stack([A, B, C, Gx, Gy], axis=-1)  # (N, M, 5)
+    return np.stack([Gx, Gy], axis=-1), coeffs
 
 
 # =========================

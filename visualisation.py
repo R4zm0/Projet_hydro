@@ -20,6 +20,7 @@
 # prend exemple sur afficher 2D pour la forme attendu d'une fonction d'affichage
 
 import matplotlib
+from matplotlib import scale
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -61,3 +62,28 @@ def afficher_2D(X, Y, Z, title = "Z", niveaux = True, n_levels = 10, cotes = Tru
             ax.clabel(contours, inline=True, fontsize=8)
             
     return fig, ax
+
+def afficher_gradient(X, Y, G, ax=None, step=10, color="red", scale=None, Pointe_vers_max = False):
+    
+    "afficher les gradient sur une figure déjà existante, G doit être de shape (X.shape[0], X.shape[1], 2) et correspondre au gradient vectoriel de Z, c'est à dire G[:,:,0] = dZ/dx et G[:,:,1] = dZ/dy"
+    
+    """scale=None   # automatique
+    scale=1      # très longues
+    scale=10     # moyennes
+    scale=100    # courtes
+
+    Pointe_vers_max = True : les flèches pointent vers la direction de la pente la plus forte (max de Z), les maximums locaux
+    Pointe_vers_max = False : les flèches pointent vers la direction de la pente la plus faible (min de Z), les minimums locaux
+    """
+    if not Pointe_vers_max:
+        G = -G  # inverser les flèches pour pointer vers les minimums locaux au lieu des maximums locaux
+
+    if ax is None:
+        _, ax = plt.subplots()
+    
+    sl = (slice(None, None, step), slice(None, None, step))
+    Gx = G[..., 0]
+    Gy = G[..., 1]
+    ax.quiver(X[sl], Y[sl], Gx[sl], Gy[sl], color=color, scale=scale)
+
+    return ax
