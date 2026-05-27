@@ -38,3 +38,5 @@ def grad_double_sin(X, Y):
     dx = 0.5 * np.cos(u)
     dy = 0.75 * np.cos(u) * np.cos(Y/20) + 0.4 * np.cos(Y/5)
     return np.stack([dx, dy], axis=-1)
+
+
