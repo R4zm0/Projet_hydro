@@ -63,14 +63,152 @@ def gradient_evans(Z, s=1.0):
 # =========================
 # 3. BPI
 # =========================
-
-def bpi(z, size=3):
+# =========================
+# Utils BPI
+# =========================
+ 
+def _center_idx_in_footprint(footprint):
+    """
+    Retourne l'index du pixel central dans la fenêtre compressée passée
+    par generic_filter (seuls les pixels True du footprint sont fournis).
+    """
+    cy, cx = np.array(footprint.shape) // 2
+    flat_true = np.flatnonzero(footprint)
+    center_flat = np.ravel_multi_index((cy, cx), footprint.shape)
+    return int(np.searchsorted(flat_true, center_flat))
+ 
+ 
+def _bpi_func(center_idx):
+    """Générateur de fonction BPI : centre - moyenne des voisins."""
     def func(window):
-        center = window[len(window)//2]
-        return center - np.mean(window)
-
-    return generic_filter(z, func, size=size)
-
+        center = window[center_idx]
+        neighbors = np.delete(window, center_idx)
+        return center - np.mean(neighbors) if len(neighbors) > 0 else 0.0
+    return func
+ 
+ 
+# =========================
+# 3. BPI calcul 
+# =========================
+ 
+def bpi_rectangle(z, size_y=3, size_x=3, mode='nearest'):
+    """
+    BPI avec voisinage rectangulaire.
+    size_y, size_x : dimensions de la fenêtre (impairs recommandés).
+    """
+    footprint = np.ones((size_y, size_x), dtype=bool)
+    cidx = _center_idx_in_footprint(footprint)
+    return generic_filter(z, _bpi_func(cidx), footprint=footprint, mode=mode)
+ 
+ 
+def bpi_disk(z, radius=3, mode='nearest'):
+    """
+    BPI avec voisinage circulaire (disque).
+    Tous les pixels à distance <= radius du centre.
+    """
+    r = int(radius)
+    y, x = np.ogrid[-r:r + 1, -r:r + 1]
+    footprint = (x**2 + y**2) <= r**2
+    cidx = _center_idx_in_footprint(footprint)
+    return generic_filter(z, _bpi_func(cidx), footprint=footprint, mode=mode)
+ 
+ 
+def bpi_annulus(z, r_inner=2, r_outer=5, mode='nearest'):
+    """
+    BPI avec voisinage en anneau (couronne circulaire).
+    Pixels à distance dans [r_inner, r_outer].
+    Le centre lui-même est exclu du voisinage.
+ 
+    Notes
+    -----
+    Avec r_inner=0 → équivalent disque.
+    Classiquement utilisé pour capturer la position à grande échelle
+    en ignorant le voisinage immédiat.
+    """
+    ro = int(r_outer)
+    y, x = np.ogrid[-ro:ro + 1, -ro:ro + 1]
+    dist2 = x**2 + y**2
+    ring = (dist2 >= r_inner**2) & (dist2 <= ro**2)
+ 
+    # Le centre doit être dans le footprint pour que generic_filter
+    # le passe dans la fenêtre — on le retire ensuite dans func.
+    cy, cx = ro, ro
+    ring[cy, cx] = True
+    footprint = ring
+ 
+    cidx = _center_idx_in_footprint(footprint)
+    return generic_filter(z, _bpi_func(cidx), footprint=footprint, mode=mode)
+ 
+ 
+def bpi_sector(z, radius=5, angle_center=0.0, angle_width=np.pi / 2,
+               mode='nearest'):
+    """
+    BPI avec voisinage en secteur angulaire.
+ 
+    Parameters
+    ----------
+    radius       : rayon du secteur (pixels)
+    angle_center : direction centrale (radians, convention trigonométrique
+                   0 = Est, π/2 = Nord)
+    angle_width  : ouverture angulaire totale du secteur (radians)
+    mode         : gestion des bords (voir scipy.ndimage)
+ 
+    Notes
+    -----
+    Pour orienter le secteur vers l'aspect d'un versant, calculer
+    angle_center pixel par pixel et appeler bpi_sector_adaptive().
+    """
+    r = int(radius)
+    y, x = np.ogrid[-r:r + 1, -r:r + 1]
+    dist2 = x**2 + y**2
+ 
+    # Angles dans la convention image (y vers le bas → inversion)
+    angles = np.arctan2(-y, x)
+ 
+    # Différence angulaire ramenée dans [-π, π]
+    half = angle_width / 2.0
+    diff = (angles - angle_center + np.pi) % (2 * np.pi) - np.pi
+ 
+    in_sector = (dist2 > 0) & (dist2 <= r**2) & (np.abs(diff) <= half)
+ 
+    # Inclure le centre
+    cy, cx = r, r
+    in_sector[cy, cx] = True
+    footprint = in_sector
+ 
+    cidx = _center_idx_in_footprint(footprint)
+    return generic_filter(z, _bpi_func(cidx), footprint=footprint, mode=mode)
+ 
+ 
+def bpi_sector_adaptive(z, aspect, radius=5, angle_width=np.pi / 2,
+                        mode='nearest'):
+    """
+    BPI en secteur orienté pixel par pixel selon l'aspect local.
+    Revient à calculer bpi_sector pour chaque angle unique présent
+    dans la carte d'aspect (discrétisée).
+ 
+    Parameters
+    ----------
+    z            : MNT (N, M)
+    aspect       : carte d'aspect en radians (même shape que z)
+    radius, angle_width, mode : idem bpi_sector
+    """
+    n_bins = 36  # résolution angulaire : pas de 10°
+    bin_edges = np.linspace(-np.pi, np.pi, n_bins + 1)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2.0
+    indices = np.digitize(aspect, bin_edges) - 1
+    indices = np.clip(indices, 0, n_bins - 1)
+ 
+    result = np.zeros_like(z, dtype=float)
+    for i, angle in enumerate(bin_centers):
+        mask = (indices == i)
+        if not np.any(mask):
+            continue
+        bpi_map = bpi_sector(z, radius=radius, angle_center=angle,
+                             angle_width=angle_width, mode=mode)
+        result[mask] = bpi_map[mask]
+ 
+    return result
 
 # =========================
 # 4. RUGOSITÉ
