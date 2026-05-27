@@ -40,7 +40,7 @@ def gradient_evans(Z, s=1.0):
     def make_coeff(idx):
         def compute(window):
             z1,z2,z3,z4,z5,z6,z7,z8,z9 = window
-            A = (z1+z3+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
+            A = (z1+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
             B = (z1+z2+z3+z7+z8+z9)/(6*s**2) - (z4+z5+z6)/(3*s**2)
             C = (z3+z7-z1-z9)/(4*s**2)
             D = (z3+z6+z9-z1-z4-z7)/(6*s**2)
@@ -172,6 +172,8 @@ def bpi_sector(z, radius=5, angle_center=0.0, angle_width=np.pi / 2,
     in_sector = (dist2 > 0) & (dist2 <= r**2) & (np.abs(diff) <= half)
  
     # Inclure le centre
+    
+
     cy, cx = r, r
     in_sector[cy, cx] = True
     footprint = in_sector
@@ -278,3 +280,4 @@ def principal_curvatures(coeffs):
     kmax = -A - B + np.sqrt((A - B)**2 + C**2)
 
     return kmin, kmax
+
