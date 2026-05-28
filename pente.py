@@ -1,8 +1,11 @@
 import numpy as np
 from scipy.ndimage import convolve, generic_filter, gaussian_filter
 
+
+echelle = 1.0  # échelle spatiale (m/pixel) pour les gradients
+
 # =========================
-# Utils
+# Utils # tous corrects et testés, à garder tels quels
 # =========================
 
 def _safe_gradient_norm(Gx, Gy):
@@ -13,7 +16,7 @@ def _aspect(Gx, Gy):
 
 
 # =========================
-# 1. GRADIENTS
+# 1. GRADIENTS # tous corrects et testés, à garder tels quels
 # =========================
 
 def gradient_tpp(Z, dx=1.0, dy=1.0):
@@ -61,7 +64,7 @@ def gradient_evans(Z, s=1.0):
 
 
 # =========================
-# 3. BPI
+# 3. BPI # tous plus ou moin correct, n'ayant pas bcp de reference j'ai pas pu testé bien
 # =========================
 # =========================
 # Utils BPI
@@ -213,7 +216,7 @@ def bpi_sector_adaptive(z, aspect, radius=5, angle_width=np.pi / 2,
     return result
 
 # =========================
-# 4. RUGOSITÉ
+# 4. RUGOSITÉ # Pas testé, à modifier / verifier / compléter
 # =========================
 
 def roughness_std(z, size=3):
@@ -247,7 +250,7 @@ def roughness_normals(slope, aspect, size=3):
 
 
 # =========================
-# 5. COURBURES
+# 5. COURBURES # Pas testé, à modifier / verifier / compléter/ c'est de la merde d' IA
 # =========================
 
 def curvatures(fx, fy, coeffs):

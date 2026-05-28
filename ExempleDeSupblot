@@ -1,0 +1,70 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import visualisation as vis
+import cmcrameri
+
+# MNTs artificiels
+x = np.arange(0, 101)
+y = np.arange(0, 101)
+X, Y = np.meshgrid(x, y)
+
+Z1 = 5*np.sin(X/10 + 3*np.sin(Y/20)) + 2*np.sin(Y/5)           # double sin
+Z2 = 5 * np.tanh((X - 40) / 5)                                   # plateau
+d  = np.sqrt((X-40)**2 + (Y-50)**2)
+Z3 = np.where(d == 0, 10.0, 10 * np.sin(0.1*d) / (0.1*d))       # sinc
+
+fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+
+z_min = min(Z1.min(), Z2.min(), Z3.min())
+z_max = max(Z1.max(), Z2.max(), Z3.max())
+
+
+fig, axes = plt.subplots(2, 3, figsize=(18, 12))
+
+# réserver 8% à droite pour la colorbar
+fig.subplots_adjust(right=0.88, wspace=0.25, hspace=0.3)
+
+# axe colorbar : [left, bottom, width, height] en fraction de la figure
+cax = fig.add_axes([0.91, 0.1, 0.02, 0.8])
+_, _, im = vis.afficher_2D(X, Y, Z1, ax=axes[0,0],
+                            title="double sin — classique",
+                            Zname="Altitude [m]", cmap=cmcrameri.cm.navia,
+                            vmin=z_min, vmax=z_max,
+                            niveaux=True, n_levels=8)
+
+vis.afficher_2D(X, Y, Z1, ax=axes[0,1],
+                title="double sin — hillshade doux",
+                Zname="Altitude [m]", cmap=cmcrameri.cm.navia,
+                vmin=z_min, vmax=z_max,
+                hillshade=True, vert_exag=2, blend_mode='soft',
+                niveaux=False)
+
+vis.afficher_2D(X, Y, Z1, ax=axes[0,2],
+                title="double sin — hillshade exagéré",
+                Zname="Altitude [m]", cmap=cmcrameri.cm.navia,
+                vmin=z_min, vmax=z_max,
+                hillshade=True, vert_exag=8, blend_mode='overlay',
+                niveaux=False)
+
+vis.afficher_2D(X, Y, Z2, ax=axes[1,0],
+                title="plateau — gist_earth",
+                Zname="Altitude [m]", cmap="gist_earth",
+                vmin=z_min, vmax=z_max,
+                niveaux=True, n_levels=5, cotes=True)
+
+vis.afficher_2D(X, Y, Z3, ax=axes[1,1],
+                title="sinc — hillshade",
+                Zname="Altitude [m]", cmap="terrain",
+                vmin=z_min, vmax=z_max,
+                hillshade=True, vert_exag=4, blend_mode='soft',
+                niveaux=True, n_levels=6, cotes=False)
+
+vis.afficher_2D(X, Y, Z3, ax=axes[1,2],
+                title="sinc — classique",
+                Zname="Altitude [m]", cmap="terrain",
+                vmin=z_min, vmax=z_max,
+                niveaux=True, n_levels=6)
+
+# colorbar unique à droite de toute la figure
+fig.colorbar(im, cax=cax, label="Altitude [m]")
+plt.show()

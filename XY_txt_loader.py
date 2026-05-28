@@ -25,21 +25,26 @@ G, coeffs = pente.gradient_evans(Z)
 print("shape de G : ", G.shape)
 print(G)
 
-figure, sinusplot = vis.afficher_2D(X, Y, Z, title="double sin double monstre", Zname="Altitude [m]", niveaux=True, n_levels=5, cotes=True, cmap="viridis")
-sinusplot = vis.afficher_gradient(X, Y, G, ax=sinusplot, step=5, color="red", scale=20)
-plt.show()
+fig, axes = plt.subplots(1, 2)
 
+_, sinusplot, im = vis.afficher_2D(X, Y, Z, ax=axes[0],
+                                    title="double sin double monstre",
+                                    Zname="Altitude [m]", niveaux=True,
+                                    n_levels=5, cotes=True, cmap="viridis")
 
-plt.hist(
-    mnt.flatten(),
-    bins=100,           # nombre de barres
-    density=False,     # True = densité (aire = 1)
-    alpha=0.7,         # transparence
-    edgecolor='blue'  # bordures des barres
-)
-plt.title("Histogramme des données")
-plt.xlabel("Valeurs")
-plt.ylabel("Fréquence")
-plt.legend()
-plt.grid(True)
+vis.afficher_gradient(X, Y, G, ax=sinusplot, step=5, color="red", scale=20)
+
+_, sinusplotshade, _ = vis.afficher_2D(X, Y, Z, ax=axes[1],
+                                        title="double sin hillshade",
+                                        Zname="Altitude [m]", niveaux=True,
+                                        n_levels=5, cotes=True, cmap="terrain",
+                                        hillshade=True, vert_exag=4, blend_mode='soft')
+
+vis.afficher_gradient(X, Y, G, ax=sinusplotshade, step=5, color="red", scale=20)
+plot_axes = fig.axes  # capture avant la colorbar
+fig.colorbar(im, ax=plot_axes, label="Altitude [m]", shrink=0.65)  # ← après, pour pas se faire écraser
+
+plt.tight_layout()
+fig.subplots_adjust(right=0.75)  # ← après, pour pas se faire écraser
+
 plt.show()
