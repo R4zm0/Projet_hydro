@@ -21,7 +21,7 @@ manouvellevariable = "test de branch"
 mnt = np.loadtxt('txt/double_sin.txt')
 Z = mnt
 
-G, coeffs = pente.gradient_evans(Z)
+G = pente.gradient_tpp(Z)
 print("shape de G : ", G.shape)
 print(G)
 

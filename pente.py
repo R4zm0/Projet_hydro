@@ -22,20 +22,18 @@ def _aspect(Gx, Gy):
 def gradient_tpp(Z, dx=1.0, dy=1.0):
     """Three Points Plane (TPP)"""
     Z_pad = np.pad(Z, 1, mode='edge')
-    Gx = (np.roll(Z_pad, -1, axis=1) - Z_pad) / dx
-    Gy = (np.roll(Z_pad, -1, axis=0) - Z_pad) / dy
-    return np.stack([Gx[1:-1, 1:-1], Gy[1:-1, 1:-1]], axis=-1)
-
+    Gx = (Z_pad[1:-1, 2:] - Z_pad[1:-1, 1:-1]) / dx
+    Gy = (Z_pad[2:, 1:-1] - Z_pad[1:-1, 1:-1]) / dy
+    return np.stack([Gx, Gy], axis=-1)
 
 def gradient_fcn(Z, dx=1.0, dy=1.0):
     """Four Closest Neighbours (FCN)"""
-    Z_pad = np.pad(Z, 1, mode='edge')          # (N+2, M+2)
-    print("shape de roll-1 : ", np.roll(Z_pad, -1, axis=1).shape)
-    print("shape de roll+1 : ", np.roll(Z_pad, 1, axis=1).shape)
-    Gx = (np.roll(Z_pad, -1, axis=1) - np.roll(Z_pad, 1, axis=1)) / (2 * dx)
-    Gy = (np.roll(Z_pad, -1, axis=0) - np.roll(Z_pad, 1, axis=0)) / (2 * dy)
+    Z_pad = np.pad(Z, 1, mode='edge')
+    Gx = (Z_pad[1:-1, 2:] - Z_pad[1:-1, :-2]) / (2 * dx)
+    Gy = (Z_pad[2:, 1:-1] - Z_pad[:-2, 1:-1]) / (2 * dy)
+    return np.stack([Gx, Gy], axis=-1)
 
-    return np.stack([Gx[1:-1, 1:-1], Gy[1:-1, 1:-1]], axis=-1)  # → (N, M, 2)
+
 
 def gradient_evans(Z, s=1.0):
     """Evans polynomial fit"""

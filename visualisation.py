@@ -28,7 +28,7 @@ from matplotlib.cm import ScalarMappable
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def afficher_2D(X, Y, Z, ax=None, title="Z", niveaux=True, colorbar=False, n_levels=10,
-                cotes=True, cmap="viridis", Zname="Z", vmin=None, vmax=None,
+                cotes=True, cmap="viridis", Zname="Z", vmin=None, vmax=None, norm=None,
                 hillshade=False, vert_exag=1, blend_mode='overlay'):
     """
     Paramètres
@@ -48,7 +48,7 @@ def afficher_2D(X, Y, Z, ax=None, title="Z", niveaux=True, colorbar=False, n_lev
     cmap     : str      colormap matplotlib
     vmin     : float    valeur min de la colormap (None = auto depuis Z)
     vmax     : float    valeur max de la colormap (None = auto depuis Z)
-
+    norm     : permet de changer la methode de normalisation des couleurs, par exemple CenteredNorm pour centrer sur une valeur particulière (ex: 0 pour la bathymétrie), ou LogNorm pour une échelle logarithmique, par defaut Normalize pour une échelle linéaire classique entre vmin et vmax
     hillshade  : bool   activer l'effet d'ombrage (estompage)
     vert_exag  : float  exagération verticale pour le hillshade
                         1  = échelle réelle, ombres douces
@@ -74,9 +74,10 @@ def afficher_2D(X, Y, Z, ax=None, title="Z", niveaux=True, colorbar=False, n_lev
     # bornes auto si non fournies
     _vmin = vmin if vmin is not None else Z.min()
     _vmax = vmax if vmax is not None else Z.max()
+    norm = norm if norm is not None else Normalize(vmin=_vmin, vmax=_vmax)
 
     if hillshade:
-        norm = Normalize(vmin=_vmin, vmax=_vmax)
+        
         ls = LightSource(azdeg=315, altdeg=45) # direction de la lumière : 315° = nord-ouest, 45° d'altitude c'est apparament la convention en barymétrie
         rgb = ls.shade(Z, cmap=plt.get_cmap(cmap), norm=norm,
                        vert_exag=vert_exag,   # exagération verticale
@@ -84,13 +85,16 @@ def afficher_2D(X, Y, Z, ax=None, title="Z", niveaux=True, colorbar=False, n_lev
         ax.imshow(rgb, extent=(X.min(), X.max(), Y.min(), Y.max()), origin='lower')
         # ScalarMappable : objet "factice" pour que la colorbar sache
         # quelle échelle afficher (ls.shade retourne du RGBA, pas un AxesImage classique)
-        im = ScalarMappable(cmap=cmap, norm=norm)
+        im = ScalarMappable(cmap=cmap, norm=norm) # vuq eu im sert globalement à rien à part des color bar, on s'enbête pas c'est pas un vrai im mais ça fait le job pour la colorbar
+    
     else:
         im = ax.imshow(Z, extent=(X.min(), X.max(), Y.min(), Y.max()),
-                       origin='lower', cmap=cmap, vmin=_vmin, vmax=_vmax)
+                       origin='lower', cmap=cmap, norm=norm)
 
     if colorbar:
-        fig.colorbar(im, ax=ax, label=Zname)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        ax.get_figure().colorbar(im, cax=cax, label=Zname)
 
 
     ax.set_title(title)
