@@ -13,7 +13,6 @@ Z2 = 5 * np.tanh((X - 40) / 5)                                   # plateau
 d  = np.sqrt((X-40)**2 + (Y-50)**2)
 Z3 = np.where(d == 0, 10.0, 10 * np.sin(0.1*d) / (0.1*d))       # sinc
 
-fig, axes = plt.subplots(2, 3, figsize=(18, 12))
 
 z_min = min(Z1.min(), Z2.min(), Z3.min())
 z_max = max(Z1.max(), Z2.max(), Z3.max())
