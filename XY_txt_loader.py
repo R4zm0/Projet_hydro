@@ -107,11 +107,11 @@ X, Y, Z = load_xyz_separes(
 
 
 
-X_rel = X - X.min()
-Y_rel = Y - Y.min()
-vis.afficher_2D(X_rel, Y_rel, Z, ax=ax[1], title=f"Profondeur  [m] ",
+X_rel = X 
+Y_rel = Y
+vis.afficher_2D(X_rel, Y_rel, Z, ax=ax[1], title=f"Profondeur  [m] de Basse St Pierre",
                 Zname= "profondeur [m]", niveaux=True, cotes=True,
-                cmap="gist_earth", hillshade=True, n_levels=5)
+                cmap="gist_earth", hillshade=True, n_levels=5, colorbar=True)
 """
 vis.afficher_histogramme(Z, ax=ax[1, 1], title="Histogramme des profondeurs à Bertheaume", Zname="Profondeur [m]",
                           bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
