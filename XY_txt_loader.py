@@ -92,8 +92,11 @@ fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 vis.afficher_2D(X, Y, Z, ax=ax[0], title="Bertheaume",
                 Zname="Profondeur [m]", niveaux=True, cotes=True,
                 cmap="gist_earth", hillshade=True, n_levels=5)
+"""
 
-
+vis.afficher_histogramme(Z, ax=ax[0, 1], title="Histogramme des profondeurs à Bertheaume", Zname="Profondeur [m]",
+                          bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
+"""
 
 # --- Cas 2 : coordonnées Lambert séparées (basse St Pierre) ---
 X, Y, Z = load_xyz_separes(
@@ -102,12 +105,18 @@ X, Y, Z = load_xyz_separes(
     'txt/reels/Basse_Saint_Pierre/z_basse_St_Pierre.txt',
 )
 
-Z = np.ma.masked_invalid(Z)
+
+
 X_rel = X - X.min()
 Y_rel = Y - Y.min()
-
-vis.afficher_2D(X_rel, Y_rel, Z, ax=ax[1], title="Basse Saint Pierre",
-                Zname="Profondeur [m]", niveaux=True, cotes=True,
+vis.afficher_2D(X_rel, Y_rel, Z, ax=ax[1], title=f"Profondeur  [m] ",
+                Zname= "profondeur [m]", niveaux=True, cotes=True,
                 cmap="gist_earth", hillshade=True, n_levels=5)
+"""
+vis.afficher_histogramme(Z, ax=ax[1, 1], title="Histogramme des profondeurs à Bertheaume", Zname="Profondeur [m]",
+                          bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
+"""
+plt.tight_layout()
+
 plt.show()
 
