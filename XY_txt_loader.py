@@ -1,5 +1,6 @@
 #from pentes import *
 
+import cmocean
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -8,43 +9,105 @@ import visualisation as vis
 import fonction_theoriques as ft
 import pente as pente
 # truc à changer 
-N_Taille_Grid = 101
+
+"""
+load_reel.py  –  Loader pour les MNT réels du projet hydro
+===========================================================
+
+Deux fonctions publiques :
+
+    X, Y, Z = load_z(filepath, pas=1.0)
+        → pour tous les fichiers "Z seul" : *_z.txt, z_*.txt, *.z, *.xyz (grille)
+          - construit un meshgrid X, Y avec un pas métrique donné (défaut 1 m)
+
+    X, Y, Z = load_xyz_separes(x_file, y_file, z_file)
+        → pour les fichiers à coordonnées réelles séparées :
+          x_basse_St_Pierre.txt / y_basse_St_Pierre.txt / z_basse_St_Pierre.txt
+          (et leurs versions _zoom)
+          - X, Y sont de vraies coordonnées Lambert (métriques)
+          - Z peut contenir des NaN (zones non mesurées)
+"""
+
+import numpy as np
 
 
-# Dimensions des terrains artificiels
-x = np.arange(0, N_Taille_Grid)
-y = np.arange(0, N_Taille_Grid)
-X, Y = np.meshgrid(x, y)
+def load_z(filepath, pas=1.0):
+    """
+    Charge un MNT depuis un fichier contenant uniquement les valeurs Z
+    (grille 2D de flottants séparés par des espaces/tabs).
+
+    Formats supportés : .txt, .z, .xyz (grille déguisée)
+
+    Paramètres
+    ----------
+    filepath : str   chemin vers le fichier
+    pas      : float résolution spatiale en mètres (défaut 1 m)
+
+    Retourne
+    --------
+    X, Y, Z : np.ndarray 2D  (meshgrid-compatibles avec vis.afficher_2D)
+    """
+    Z = np.loadtxt(filepath)
+
+    nrows, ncols = Z.shape
+    x = np.arange(ncols) * pas
+    y = np.arange(nrows) * pas
+    X, Y = np.meshgrid(x, y)
+
+    return X, Y, Z
 
 
-manouvellevariable = "test de branch"
-mnt = np.loadtxt('txt/double_sin.txt')
-Z = mnt
+def load_xyz_separes(x_file, y_file, z_file):
+    """
+    Charge un MNT depuis trois fichiers séparés x / y / z.
 
-G = pente.gradient_tpp(Z)
-print("shape de G : ", G.shape)
-print(G)
+    Chaque fichier est une grille 2D de même dimension.
+    Les coordonnées X, Y sont métriques (Lambert).
+    Z peut contenir des NaN (zones non sondées).
 
-fig, axes = plt.subplots(1, 2)
+    Paramètres
+    ----------
+    x_file, y_file, z_file : str  chemins vers les fichiers
 
-_, sinusplot, im = vis.afficher_2D(X, Y, Z, ax=axes[0],
-                                    title="double sin double monstre",
-                                    Zname="Altitude [m]", niveaux=True,
-                                    n_levels=5, cotes=True, cmap="viridis")
+    Retourne
+    --------
+    X, Y, Z : np.ndarray 2D
+    """
+    X = np.loadtxt(x_file)
+    Y = np.loadtxt(y_file)
+    Z = np.loadtxt(z_file)
 
-vis.afficher_gradient(X, Y, G, ax=sinusplot, step=5, color="red", scale=20)
+    assert X.shape == Y.shape == Z.shape, (
+        f"Dimensions incohérentes : X={X.shape}, Y={Y.shape}, Z={Z.shape}"
+    )
 
-_, sinusplotshade, _ = vis.afficher_2D(X, Y, Z, ax=axes[1],
-                                        title="double sin hillshade",
-                                        Zname="Altitude [m]", niveaux=True,
-                                        n_levels=5, cotes=True, cmap="terrain",
-                                        hillshade=True, vert_exag=4, blend_mode='soft')
+    return X, Y, Z
 
-vis.afficher_gradient(X, Y, G, ax=sinusplotshade, step=5, color="red", scale=20)
-plot_axes = fig.axes  # capture avant la colorbar
-fig.colorbar(im, ax=plot_axes, label="Altitude [m]", shrink=0.65)  # ← après, pour pas se faire écraser
 
-plt.tight_layout()
-fig.subplots_adjust(right=0.75)  # ← après, pour pas se faire écraser
 
+# --- Cas 1 : fichier Z seul (tous les *_z.txt, z_*.txt, *.z, *.xyz) ---
+X, Y, Z =load_z('txt/reels/bertheaume_z.txt')  # pas=1m par défaut
+
+fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+vis.afficher_2D(X, Y, Z, ax=ax[0], title="Bertheaume",
+                Zname="Profondeur [m]", niveaux=True, cotes=True,
+                cmap="gist_earth", hillshade=True, n_levels=5)
+
+
+
+# --- Cas 2 : coordonnées Lambert séparées (basse St Pierre) ---
+X, Y, Z = load_xyz_separes(
+    'txt/reels/Basse_Saint_Pierre/x_basse_St_Pierre.txt',
+    'txt/reels/Basse_Saint_Pierre/y_basse_St_Pierre.txt',
+    'txt/reels/Basse_Saint_Pierre/z_basse_St_Pierre.txt',
+)
+
+Z = np.ma.masked_invalid(Z)
+X_rel = X - X.min()
+Y_rel = Y - Y.min()
+
+vis.afficher_2D(X_rel, Y_rel, Z, ax=ax[1], title="Basse Saint Pierre",
+                Zname="Profondeur [m]", niveaux=True, cotes=True,
+                cmap="gist_earth", hillshade=True, n_levels=5)
 plt.show()
+
