@@ -14,7 +14,7 @@ def _safe_gradient_norm(Gx, Gy):
 def _aspect(Gx, Gy):
     return np.arctan2(-Gx, -Gy)
 
-
+# seline est passée par ici
 # =========================
 # 1. GRADIENTS # tous corrects et testés, à garder tels quels
 # =========================
