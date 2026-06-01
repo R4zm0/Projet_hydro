@@ -71,13 +71,13 @@ def afficher_2D(X, Y, Z, ax=None, title="Z", niveaux=True, colorbar=False, n_lev
     else:
         fig = ax.get_figure()
 
+    Z = np.ma.masked_invalid(Z)
+
     # bornes auto si non fournies
     _vmin = vmin if vmin is not None else Z.min()
     _vmax = vmax if vmax is not None else Z.max()
     norm = norm if norm is not None else Normalize(vmin=_vmin, vmax=_vmax)
-
     if hillshade:
-        
         ls = LightSource(azdeg=315, altdeg=45) # direction de la lumière : 315° = nord-ouest, 45° d'altitude c'est apparament la convention en barymétrie
         rgb = ls.shade(Z, cmap=plt.get_cmap(cmap), norm=norm,
                        vert_exag=vert_exag,   # exagération verticale

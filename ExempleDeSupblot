@@ -63,9 +63,9 @@ norm_commune = CenteredNorm(0)
 
 fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
-vis.afficher_2D(X, Y, erreur_tpp_plot, ax=ax[0], title='TPP', Zname='Erreur [m/m]',
+vis.afficher_2D(X, Y, erreur_tpp_plot, ax=ax[0], title='TPP', Zname=f"Erreur [m/m] : min={erreur_tpp_plot.mean():.2e}, max={erreur_tpp_plot.max():.2e}, écart-type={erreur_tpp_plot.std():.2e}",
                 cmap=cmap, norm=norm_commune, niveaux=False, colorbar=True)
-vis.afficher_2D(X, Y, erreur_fcn_plot, ax=ax[1], title='FCN', Zname='Erreur [m/m]',
+vis.afficher_2D(X, Y, erreur_fcn_plot, ax=ax[1], title='FCN', Zname=f"Erreur [m/m] : min={erreur_fcn_plot.mean():.2e}, max={erreur_fcn_plot.max():.2e}, écart-type={erreur_fcn_plot.std():.2e}",
                 cmap=cmap, norm=norm_commune, niveaux=False, colorbar=True)
 
 plt.suptitle('Normalisation partagée')
