@@ -108,6 +108,101 @@ def afficher_2D(X, Y, Z, ax=None, title="Z", niveaux=True, colorbar=False, n_lev
 
     return fig, ax, im
 
+
+
+def afficher_3D(X, Y, Z, ax=None, title="Z", colorbar=False, n_levels=10,
+                cmap="viridis", Zname="Z", vmin=None, vmax=None, norm=None,
+                alpha=1.0, shade=True, rstride=1, cstride=1,
+                contour_proj=False, C=None):
+    """
+    Affiche un MNT en surface 3D. Même esprit qu'afficher_2D.
+ 
+    Paramètres
+    ----------
+    X, Y : np.ndarray   meshgrid (2D)
+    Z    : np.ndarray   valeurs de surface (même shape que X, Y)
+ 
+    ax       : Axes3D   si fourni, on dessine dessus ; sinon on crée un nouveau subplot 3D
+                        créer un axes 3D externe : fig.add_subplot(projection='3d')
+                        ou plt.subplots(subplot_kw={'projection': '3d'})
+    title    : str      titre du graphique
+    Zname    : str      label de l'axe Z et de la colorbar
+ 
+    colorbar : bool     afficher une colorbar
+    cmap     : str      colormap matplotlib
+    vmin     : float    valeur min de la colormap (None = auto depuis les données)
+    vmax     : float    valeur max de la colormap (None = auto)
+    norm     : ...      normalisation des couleurs (ex: CenteredNorm, LogNorm)
+ 
+    alpha    : float    transparence de la surface [0, 1]
+    shade    : bool     ombrage directionnel de la surface (True recommandé sauf avec C)
+                        si C fourni, mettre shade=False pour que les couleurs restent fidèles
+    rstride  : int      pas d'échantillonnage en lignes   (1 = tous les points)
+    cstride  : int      pas d'échantillonnage en colonnes (1 = tous les points)
+                        augmenter (ex: 2 ou 3) sur les grands grids pour accélérer
+ 
+    contour_proj : bool projeter les courbes de niveau sur le sol (z = min(Z))
+    n_levels     : int  nombre de niveaux projetés
+ 
+    C : np.ndarray      si fourni, colore la surface par C au lieu de Z
+                        exemple : C = pente, C = exposition, C = BPI
+                        les vmin/vmax/norm s'appliquent à C dans ce cas
+ 
+    Retourne
+    --------
+    fig, ax, surf : Figure, Axes3D, Poly3DCollection
+                    surf sert de mappable pour une colorbar externe :
+                    fig.colorbar(surf, ax=[ax1, ax2], label="Pente [m/m]")
+    """
+    if ax is None:
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+    else:
+        fig = ax.get_figure()
+ 
+    # Données qui pilotent la colormap (Z ou C)
+    data_color = C if C is not None else Z
+    _vmin = vmin if vmin is not None else np.nanmin(data_color)
+    _vmax = vmax if vmax is not None else np.nanmax(data_color)
+    _norm = norm if norm is not None else Normalize(vmin=_vmin, vmax=_vmax)
+ 
+    if C is not None:
+        # Couleurs calculées depuis C, plaquées sur la géométrie Z
+        facecolors = plt.get_cmap(cmap)(_norm(C))
+        surf = ax.plot_surface(X, Y, Z,
+                               facecolors=facecolors,
+                               shade=shade, alpha=alpha,
+                               rstride=rstride, cstride=cstride,
+                               antialiased=True)
+        # ScalarMappable factice pour la colorbar (plot_surface avec facecolors
+        # ne porte pas l'info de normalisation nativement)
+        im = ScalarMappable(cmap=cmap, norm=_norm)
+        im.set_array(data_color)
+    else:
+        surf = ax.plot_surface(X, Y, Z,
+                               cmap=cmap, norm=_norm,
+                               shade=shade, alpha=alpha,
+                               rstride=rstride, cstride=cstride,
+                               antialiased=True)
+        im = surf
+ 
+    if contour_proj:
+        z_offset = float(np.nanmin(Z))
+        ax.contour(X, Y, Z, levels=n_levels, zdir='z', offset=z_offset,
+                   cmap=cmap, alpha=0.5, linewidths=0.8)
+        ax.set_zlim(z_offset, np.nanmax(Z))
+ 
+    if colorbar:
+        fig.colorbar(im, ax=ax, label=Zname, shrink=0.5, aspect=15, pad=0.12)
+ 
+    ax.set_title(title)
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("y [m]")
+    ax.set_zlabel(Zname)
+ 
+    return fig, ax, surf
+
+
 def afficher_gradient(X, Y, G, ax=None, step=10, color="red", scale=None,
                       ratio_width=0.0002, Pointe_vers_max=False):
 

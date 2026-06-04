@@ -13,10 +13,13 @@ def _safe_gradient_norm(Gx, Gy):
     return np.sqrt(Gx**2 + Gy**2)
 
 def _aspect(Gx, Gy):
+    " CONVENTION : DANS LE SENS DE LA DESCENTE : 0 = NORD , pi/2 = EST, -pi/2 = OUEST, ±pi = SUD "
+    " CONVENTION : DANS LE SENS DE LA MONTÉ : 0 = SUD , -pi/2 = EST, +pi/2 = OUEST, ±pi = NORD "
+
     return np.arctan2(-Gx, -Gy)
 
 
-# =========================
+# =========================s
 # 1. GRADIENTS # tous corrects et testés, à garder tels quels
 # =========================
 
@@ -62,49 +65,11 @@ def gradient_evans(Z, s=1.0):
 
 
 
-# =========================
-# 3. BPI # tous plus ou moin correct, n'ayant pas bcp de reference j'ai pas pu testé bien
-# =========================
-# =========================
-# Utils BPI
-# =========================
- 
-def _center_idx_in_footprint(footprint):
-    """
-    Retourne l'index du pixel central dans la fenêtre compressée passée
-    par generic_filter (seuls les pixels True du footprint sont fournis).
-    """
-    cy, cx = np.array(footprint.shape) // 2
-    flat_true = np.flatnonzero(footprint)
-    center_flat = np.ravel_multi_index((cy, cx), footprint.shape)
-    return int(np.searchsorted(flat_true, center_flat))
- 
- 
-def _bpi_func(center_idx):
-    """Générateur de fonction BPI : centre - moyenne des voisins."""
-    def func(window):
-        center = window[center_idx]
-        neighbors = np.delete(window, center_idx)
-        return center - np.mean(neighbors) if len(neighbors) > 0 else 0.0
-    return func
- 
-    """
-    BPI (Bathymetric/Topographic Position Index) — implémentation par convolution.
-    
-    BPI = z_centre - mean(z_voisinage)
-    
-    Avantages par rapport à generic_filter :
-    - Chaque passe est une convolution C-optimisée → 100-1000x plus rapide.
-    - Gestion correcte des NaN (pixels invalides ignorés dans la moyenne).
-    - Validations explicites des paramètres.
-    """
     
 
+
 # =============================================================================
-# Helper interne
-# =============================================================================
-# =============================================================================
-# Helper interne
+# Helpers interne
 # =============================================================================
 
 def _bpi_from_footprint(z: np.ndarray, footprint: np.ndarray,
@@ -145,10 +110,12 @@ def _bpi_from_footprint(z: np.ndarray, footprint: np.ndarray,
 
     if nan_mask.any():
         z_fill = np.where(nan_mask, 0.0, z)
+
+
         valid  = (~nan_mask).astype(float)
 
-        sum_z = correlate(z_fill, w, mode=mode)  # ← corrigé
-        sum_v = correlate(valid,  w, mode=mode)  # ← corrigé
+        sum_z = correlate(z_fill, w, mode=mode)  
+        sum_v = correlate(valid,  w, mode=mode)  
 
         with np.errstate(invalid='ignore'):
             mean_nb = np.where(sum_v > 0, sum_z / sum_v, np.nan)
