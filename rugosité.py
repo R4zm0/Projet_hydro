@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import convolve, generic_filter, gaussian_filter
-import XY_txt_loader as loader
+import pente as p
 taille_fenetre = [3, 5, 7, 9, 11, 13, 15]
 
 
@@ -16,14 +16,16 @@ def rugosite_std(z, size):
     
     #np.reshape(ecarttype, z.shape)
     return ecarttype
- 
+j=0
 for size in taille_fenetre:
     rugosite = rugosite_std(z, size=size)
     plt.figure(size)
+    plt.subplot(2, 4, j + 1)
     plt.imshow(rugosite, cmap='viridis')
-    plt.legend()
     plt.colorbar(label='Rugosité (écart-type local)')
     plt.title(f'Rugosité (écart-type local) avec une fenêtre de {size}x{size}')
+    j+=1
+plt.show()
 
 
 
@@ -31,8 +33,8 @@ for size in taille_fenetre:
 
 #calculs des vecteurs normaux
 
-def rugosite_normale(pente, exposition, size):
-    theta = np.arctan(pente)
+def rugosite_normale(pente, exposition):
+    theta = pente
     phi = exposition
     #ramener ma matrice sous forme de vecteur flatten ou stack 
     x = np.sin(theta) * np.cos(phi)
@@ -43,11 +45,14 @@ def rugosite_normale(pente, exposition, size):
     sum_z = convolve(z, mode='constant', cval=0.0)
     r = np.sqrt(np.sum(sum_x)**2 + np.sum(sum_y)**2 + np.sum(sum_z)**2)
     return 1 - r / n
-
+i=0
 for size in taille_fenetre:
         rugosite = rugosite_normale(pente, exposition, size=size)
-        plt.figure(size+10)
+        plt.figure(size+1)
+        plt.subplot(2, 4, i + 1)
         plt.imshow(rugosite, cmap='viridis')
         plt.legend()
         plt.colorbar(label='Rugosité (dispersion des normales locales)')
-        plt.title(f'Rugosité (dispersion des normales locales) avec une fenêtre de {size}x{size}')      
+        plt.title(f'Rugosité (dispersion des normales locales) avec une fenêtre de {size}x{size}')    
+        i+=1  
+plt.show()
