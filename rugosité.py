@@ -7,7 +7,7 @@ taille_fenetre = [3, 5, 7, 9, 11, 13, 15]
 
 z = np.loadtxt('txt/reels/bertheaume_z.txt')
 print(z.shape)
-'''
+
 def rugosite_std(z, size):
     ecarttype = generic_filter(z, np.nanstd, size=size) 
     return ecarttype
@@ -22,9 +22,10 @@ for index, size in enumerate(taille_fenetre):
     ax.set_title(f'Rugosité (écart-type local) \n avec une fenêtre de {size}x{size}')
 
 axes1[-1].axis('off')
+plt.colorbar(axes1[0].images[0], ax=axes1, orientation='vertical', fraction=0.02, pad=0.01)
 plt.tight_layout()
 plt.show()
-'''
+
 
 gradients = p.gradient_fcn(z)
 pente = p._safe_gradient_norm(gradients[..., 0], gradients[..., 1])
@@ -37,9 +38,9 @@ def rugosite_normale(pente, exposition, size):
     y = np.sin(theta) * np.sin(phi)
     z_comp = np.cos(theta)
     noyau=np.ones((size,size))
-    sum_x = convolve(x,noyau, mode='constant', cval=0.0)
-    sum_y = convolve(y, noyau, mode='constant', cval=0.0)
-    sum_z = convolve(z_comp, noyau, mode='constant', cval=0.0)
+    sum_x = convolve(x,noyau, mode='reflect')
+    sum_y = convolve(y, noyau, mode='reflect')
+    sum_z = convolve(z_comp, noyau, mode='reflect')
     n=size*size
     r = np.sqrt(sum_x**2 + sum_y**2 + sum_z**2)
     return 1 - r / n
