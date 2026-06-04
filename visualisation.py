@@ -149,7 +149,9 @@ def afficher_gradient(X, Y, G, ax=None, step=10, color="red", scale=None,
 
 
 def afficher_histogramme(Z, ax=None, title="Histogramme des profondeurs", Zname="Profondeur [m]",
-                          bins=100, density=False, color="steelblue", edgecolor="white", alpha=0.8):
+                          bins=100, density=False, color="steelblue", edgecolor="white", alpha=0.8,
+                          show_moyenne=True, show_mediane=True, show_std=True, show_min=True, show_max=True):
+    
     """
     Affiche l'histogramme des valeurs d'un MNT.
 
@@ -169,27 +171,38 @@ def afficher_histogramme(Z, ax=None, title="Histogramme des profondeurs", Zname=
     --------
     fig, ax : Figure et Axes matplotlib
     """
+        
     if ax is None:
         fig, ax = plt.subplots()
     else:
         fig = ax.get_figure()
 
     valeurs = Z.flatten()
+    valeurs = valeurs[np.isfinite(valeurs)]
 
-    n, bins_edges, patches = ax.hist(
-        valeurs,
-        bins=bins,
-        density=density,
-        color=color,
-        edgecolor=edgecolor,
-        alpha=alpha
-    )
+    moyenne    = valeurs.mean()
+    ecart_type = valeurs.std()
+    mediane    = np.median(valeurs)
+    vmin       = valeurs.min()
+    vmax       = valeurs.max()
 
-    # Ligne de la moyenne
-    ax.axvline(valeurs.mean(), color="red",   linestyle="--", linewidth=1.2, label=f"Moyenne : {valeurs.mean():.2f}")
-    # Lignes ±1 écart-type
-    ax.axvline(valeurs.mean() - valeurs.std(), color="orange", linestyle=":",  linewidth=1.0, label=f"±1σ : {valeurs.std():.2f}")
-    ax.axvline(valeurs.mean() + valeurs.std(), color="orange", linestyle=":",  linewidth=1.0)
+    p1, p99 = np.percentile(valeurs, [1, 99])
+    margin  = (p99 - p1) * 0.1
+
+    n, bins_edges, patches = ax.hist(valeurs, bins=bins, range=(p1 - margin, p99 + margin),
+                                     density=density, color=color, edgecolor=edgecolor, alpha=alpha)
+
+    if show_moyenne:
+        ax.axvline(moyenne,  color="red",    linestyle="--", linewidth=1.2, label=f"Moyenne : {moyenne:.2f}")
+    if show_mediane:
+        ax.axvline(mediane,  color="purple", linestyle="--", linewidth=1.2, label=f"Médiane : {mediane:.2f}")
+    if show_std:
+        ax.axvline(moyenne - ecart_type, color="orange", linestyle=":", linewidth=1.0, label=f"±1σ : {ecart_type:.2f}")
+        ax.axvline(moyenne + ecart_type, color="orange", linestyle=":", linewidth=1.0)
+    if show_min:
+        ax.axvline(vmin, color="gray", linestyle=":", linewidth=1.0, label=f"Min : {vmin:.2f}")
+    if show_max:
+        ax.axvline(vmax, color="gray", linestyle=":", linewidth=1.0, label=f"Max : {vmax:.2f}")
 
     ax.set_title(title)
     ax.set_xlabel(Zname)
