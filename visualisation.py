@@ -247,26 +247,8 @@ def afficher_gradient(X, Y, G, ax=None, step=10, color="red", scale=None,
 
 
 def afficher_histogramme(Z, ax=None, title="Histogramme des profondeurs", Zname="Profondeur [m]",
-                          bins=100, density=False, color="steelblue", edgecolor="white", alpha=0.8):
-    """
-    Affiche l'histogramme des valeurs d'un MNT.
-
-    Paramètres
-    ----------
-    Z        : np.ndarray   tableau 2D (ou 1D) des valeurs bathymétriques
-    ax       : Axes         si fourni, on dessine dessus ; sinon on crée un nouveau subplot
-    title    : str          titre du graphique
-    Zname    : str          label de l'axe X (nom + unité de la variable)
-    bins     : int          nombre de classes de l'histogramme
-    density  : bool         True = densité de probabilité (aire = 1), False = fréquences absolues
-    color    : str          couleur de remplissage des barres
-    edgecolor: str          couleur des bordures des barres
-    alpha    : float        transparence des barres
-
-    Retourne
-    --------
-    fig, ax : Figure et Axes matplotlib
-    """
+                          bins=100, density=False, color="steelblue", edgecolor="white", alpha=0.8,
+                          show_mean=True, show_std=True, show_median=True, show_min=True, show_max=True):
     if ax is None:
         fig, ax = plt.subplots()
     else:
@@ -274,20 +256,24 @@ def afficher_histogramme(Z, ax=None, title="Histogramme des profondeurs", Zname=
 
     valeurs = Z.flatten()
 
-    n, bins_edges, patches = ax.hist(
-        valeurs,
-        bins=bins,
-        density=density,
-        color=color,
-        edgecolor=edgecolor,
-        alpha=alpha
-    )
+    ax.hist(valeurs, bins=bins, density=density,
+            color=color, edgecolor=edgecolor, alpha=alpha)
 
-    # Ligne de la moyenne
-    ax.axvline(valeurs.mean(), color="red",   linestyle="--", linewidth=1.2, label=f"Moyenne : {valeurs.mean():.2f}")
-    # Lignes ±1 écart-type
-    ax.axvline(valeurs.mean() - valeurs.std(), color="orange", linestyle=":",  linewidth=1.0, label=f"±1σ : {valeurs.std():.2f}")
-    ax.axvline(valeurs.mean() + valeurs.std(), color="orange", linestyle=":",  linewidth=1.0)
+    mean = valeurs.mean()
+    std  = valeurs.std()
+
+    if show_mean:
+        ax.axvline(mean, color="red", linestyle="--", linewidth=1.2, label=f"Moyenne : {mean:.2f}")
+    if show_std:
+        ax.axvline(mean - std, color="orange", linestyle=":", linewidth=1.0, label=f"±1σ : {std:.2f}")
+        ax.axvline(mean + std, color="orange", linestyle=":", linewidth=1.0)
+    if show_median:
+        med = np.median(valeurs)
+        ax.axvline(med, color="green", linestyle="-.", linewidth=1.2, label=f"Médiane : {med:.2f}")
+    if show_min:
+        ax.axvline(valeurs.min(), color="grey", linestyle="-", linewidth=0.8, label=f"Min : {valeurs.min():.2f}")
+    if show_max:
+        ax.axvline(valeurs.max(), color="grey", linestyle="-", linewidth=0.8, label=f"Max : {valeurs.max():.2f}")
 
     ax.set_title(title)
     ax.set_xlabel(Zname)
