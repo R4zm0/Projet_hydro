@@ -102,12 +102,41 @@ plt.show()
 fig, ax = plt.subplots(1, 3, figsize=(15, 5))
 
 vis.afficher_histogramme(erreur_tpp_evans, ax=ax[0],
-                             title=f"Histogramme des différences de méthode de tpp/evans ", Zname=f"Erreur [m]",
+                             title=f"tpp/evans ", Zname=f"Erreur [m]",
                              bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
 vis.afficher_histogramme(erreur_fcn_tpp, ax=ax[1],
-                             title=f"Histogramme des différences de méthode de fcn/tpp", Zname=f"Erreur [m]",
+                             title=f"fcn/tpp", Zname=f"Erreur [m]",
                              bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
 vis.afficher_histogramme(erreur_evans_fcn, ax=ax[2],
-                             title=f"Histogramme des différences de méthode de evans/fcn", Zname=f"Erreur [m]",
+                             title=f"evans/fcn", Zname=f"Erreur [m]",
                              bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
 
+plt.show()
+
+#comparaison des 2 méthodes de evans sur le terrain de la Morne Rouge 
+
+base = os.path.dirname(os.path.dirname(__file__))  # remonte au dossier PROJETHYDRO
+mnt = np.loadtxt(os.path.join(base, 'txt', 'reels', 'Morne_Rouge', 'morneRouge.txt'))
+
+x = np.arange(0, len(mnt[0]), 1)        #taille pour x : taille d'une sous liste qui fait une ligne
+y = np.arange(0, len(mnt), 1)       # nombre de lignes ou de sous liste 
+
+X, Y = np.meshgrid(x, y)
+
+def stats_title(nom, e):
+    return f"{nom}\nμ={e.mean():.2e}  σ={e.std():.2e}"
+
+norm_commune = CenteredNorm(0)
+cmap = 'seismic'
+
+G_reel_evans_2, _   = p.gradient_evans_methode2(mnt)
+pente_evans2  = p._safe_gradient_norm(G_reel_evans_2[..., 0], G_reel_evans_2[..., 1])
+
+erreur_evans_diff_meth = (pente_evans - pente_evans2)[1:-1, 1:-1]
+print(erreur_evans_diff_meth)
+vis.afficher_2D(X, Y, erreur_evans_diff_meth, title=stats_title('evans',   erreur_evans_diff_meth),
+                Zname='Erreur [m]', norm=norm_commune,cmap=cmap, niveaux=False, colorbar=True)
+
+plt.suptitle('Erreurs des différentes méthodes pour evans pour la carte Morne Rouge  : normalisation partagée')
+plt.tight_layout()
+plt.show()
