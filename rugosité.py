@@ -23,7 +23,6 @@ for index, size in enumerate(taille_fenetre):
 
 axes1[-1].axis('off')
 plt.colorbar(axes1[0].images[0], ax=axes1, orientation='vertical', fraction=0.02, pad=0.01)
-plt.tight_layout()
 plt.show()
 
 
@@ -56,5 +55,4 @@ for index, size in enumerate(taille_fenetre):
 
 axes2[-1].axis('off')
 plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02, pad=0.01)
-plt.tight_layout()
 plt.show()
