@@ -27,8 +27,8 @@ plt.show()
 '''
 
 gradients = p.gradient_fcn(z)
-pente = p.safe_gradient_norm(gradients[..., 0], gradients[..., 1])
-exposition = p.aspect(gradients[..., 0], gradients[..., 1])
+pente = p._safe_gradient_norm(gradients[..., 0], gradients[..., 1])
+exposition = p._aspect(gradients[..., 0], gradients[..., 1])
 
 def rugosite_normale(pente, exposition, size):
     theta = pente
@@ -54,5 +54,6 @@ for index, size in enumerate(taille_fenetre):
     ax.set_title(f'Rugosité (dispersion des normales locales) \n avec une fenêtre de {size}x{size}')    
 
 axes2[-1].axis('off')
+plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02, pad=0.01)
 plt.tight_layout()
 plt.show()
