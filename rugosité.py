@@ -36,11 +36,12 @@ def rugosite_normale(pente, exposition, size):
     x = np.sin(theta) * np.cos(phi)
     y = np.sin(theta) * np.sin(phi)
     z = np.cos(theta)
-    n=np.ones(size*size)
-    sum_x = convolve(x,n, mode='constant', cval=0.0)
-    sum_y = convolve(y, n, mode='constant', cval=0.0)
-    sum_z = convolve(z, n, mode='constant', cval=0.0)
-    r = np.sqrt(np.sum(sum_x)**2 + np.sum(sum_y)**2 + np.sum(sum_z)**2)
+    noyau=np.ones((size,size))
+    sum_x = convolve(x,noyau, mode='constant', cval=0.0)
+    sum_y = convolve(y, noyau, mode='constant', cval=0.0)
+    sum_z = convolve(z, noyau, mode='constant', cval=0.0)
+    n=size*size
+    r = np.sqrt(sum_x**2 + sum_y**2 + sum_z**2)
     return 1 - r / n
 
 fig2, axes2 = plt.subplots(2, 4, figsize=(16, 8))
