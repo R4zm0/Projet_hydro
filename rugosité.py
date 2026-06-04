@@ -7,7 +7,7 @@ taille_fenetre = [3, 5, 7, 9, 11, 13, 15]
 
 z = np.loadtxt('txt/reels/bertheaume_z.txt')
 print(z.shape)
-
+'''
 def rugosite_std(z, size):
     ecarttype = generic_filter(z, np.nanstd, size=size) 
     return ecarttype
@@ -24,7 +24,7 @@ for index, size in enumerate(taille_fenetre):
 axes1[-1].axis('off')
 plt.tight_layout()
 plt.show()
-
+'''
 
 gradients = p.gradient_fcn(z)
 pente = p.safe_gradient_norm(gradients[..., 0], gradients[..., 1])
