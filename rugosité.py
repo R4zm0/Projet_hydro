@@ -58,7 +58,7 @@ plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02
 
 #différence de ruentre le MNT et sa version lissée
 def rugosite_lisse(z,size):
-    z_lisse = gaussian_filter(z, size=size)
+    z_lisse = gaussian_filter(z,  sigma=size/2)
     return np.std(z - z_lisse)
 
 fig3, axes3 = plt.subplots(2, 4, figsize=(16, 8))
