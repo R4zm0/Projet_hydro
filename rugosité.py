@@ -30,15 +30,16 @@ gradients = p.gradient_fcn(z)
 pente = p.safe_gradient_norm(gradients[..., 0], gradients[..., 1])
 exposition = p.aspect(gradients[..., 0], gradients[..., 1])
 
-def rugosite_normale(pente, exposition):
+def rugosite_normale(pente, exposition, size):
     theta = pente
     phi = exposition
     x = np.sin(theta) * np.cos(phi)
     y = np.sin(theta) * np.sin(phi)
     z = np.cos(theta)
-    sum_x = convolve(x, mode='constant', cval=0.0)
-    sum_y = convolve(y, mode='constant', cval=0.0)
-    sum_z = convolve(z, mode='constant', cval=0.0)
+    n=np.ones(size*size)
+    sum_x = convolve(x,n, mode='constant', cval=0.0)
+    sum_y = convolve(y, n, mode='constant', cval=0.0)
+    sum_z = convolve(z, n, mode='constant', cval=0.0)
     r = np.sqrt(np.sum(sum_x)**2 + np.sum(sum_y)**2 + np.sum(sum_z)**2)
     return 1 - r / n
 
