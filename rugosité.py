@@ -23,7 +23,7 @@ for index, size in enumerate(taille_fenetre):
 
 axes1[-1].axis('off')
 plt.colorbar(axes1[0].images[0], ax=axes1, orientation='vertical', fraction=0.02, pad=0.01)
-plt.show()
+
 
 
 gradients = p.gradient_fcn(z)
@@ -51,7 +51,7 @@ for index, size in enumerate(taille_fenetre):
     rugosite = rugosite_normale(pente, exposition, size=size)
     ax = axes2[index]
     ax.imshow(rugosite, cmap='viridis')
-    ax.set_title(f'Rugosité (dispersion des normales locales) \n avec une fenêtre de {size}x{size}')    
+    ax.set_title(f'Rugosité (dispersion des normales \nlocales)  avec une fenêtre de {size}x{size}')    
 
 axes2[-1].axis('off')
 plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02, pad=0.01)
