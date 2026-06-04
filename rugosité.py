@@ -19,7 +19,7 @@ for index, size in enumerate(taille_fenetre):
     rugosite = rugosite_std(z, size=size)
     ax = axes1[index]
     ax.imshow(rugosite, cmap='viridis')
-    ax.set_title(f'Rugosité (écart-type local) avec une fenêtre de {size}x{size}')
+    ax.set_title(f'Rugosité (écart-type local) \n avec une fenêtre de {size}x{size}')
 
 axes1[-1].axis('off')
 plt.tight_layout()
@@ -35,11 +35,11 @@ def rugosite_normale(pente, exposition, size):
     phi = exposition
     x = np.sin(theta) * np.cos(phi)
     y = np.sin(theta) * np.sin(phi)
-    z = np.cos(theta)
+    z_comp = np.cos(theta)
     noyau=np.ones((size,size))
     sum_x = convolve(x,noyau, mode='constant', cval=0.0)
     sum_y = convolve(y, noyau, mode='constant', cval=0.0)
-    sum_z = convolve(z, noyau, mode='constant', cval=0.0)
+    sum_z = convolve(z_comp, noyau, mode='constant', cval=0.0)
     n=size*size
     r = np.sqrt(sum_x**2 + sum_y**2 + sum_z**2)
     return 1 - r / n
@@ -51,7 +51,7 @@ for index, size in enumerate(taille_fenetre):
     rugosite = rugosite_normale(pente, exposition, size=size)
     ax = axes2[index]
     ax.imshow(rugosite, cmap='viridis')
-    ax.set_title(f'Rugosité (dispersion des normales locales) avec une fenêtre de {size}x{size}')    
+    ax.set_title(f'Rugosité (dispersion des normales locales) \n avec une fenêtre de {size}x{size}')    
 
 axes2[-1].axis('off')
 plt.tight_layout()
