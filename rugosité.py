@@ -55,11 +55,20 @@ for index, size in enumerate(taille_fenetre):
 
 axes2[-1].axis('off')
 plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02, pad=0.01)
-plt.show()
 
+#différence de ruentre le MNT et sa version lissée
 def rugosite_lisse(z,size):
     z_lisse = gaussian_filter(z, size=size)
     return np.std(z - z_lisse)
+
+fig3, axes3 = plt.subplots(2, 4, figsize=(16, 8))
+axes3 = axes3.flatten()
 for  size in taille_fenetre:
     rugosite = rugosite_lisse(z, size=size)
     print(f'Rugosité (écart-type de la différence entre le \n MNT et sa version lissée) avec une \n fenêtre de {size}x{size}')
+
+axes3[-1].axis('off')
+plt.colorbar(axes3[0].images[0], ax=axes3, orientation='vertical', fraction=0.02, pad=0.01)
+plt.show()
+
+
