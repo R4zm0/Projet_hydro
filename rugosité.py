@@ -25,7 +25,12 @@ axes1[-1].axis('off')
 plt.tight_layout()
 plt.show()
 
-def rugosite_normale(pente, exposition, size):
+
+gradients = p.gradient_fcn(z)
+pente = p.safe_gradient_norm(gradients[..., 0], gradients[..., 1])
+exposition = p.aspect(gradients[..., 0], gradients[..., 1])
+
+def rugosite_normale(pente, exposition):
     theta = pente
     phi = exposition
     x = np.sin(theta) * np.cos(phi)
