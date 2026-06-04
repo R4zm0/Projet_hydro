@@ -51,8 +51,15 @@ for index, size in enumerate(taille_fenetre):
     rugosite = rugosite_normale(pente, exposition, size=size)
     ax = axes2[index]
     ax.imshow(rugosite, cmap='viridis')
-    ax.set_title(f'Rugosité (dispersion des normales \nlocales)  avec une fenêtre de {size}x{size}')    
+    ax.set_title(f'Rugosité (dispersion des\n normales locales) \n fenêtre de {size}x{size}')    
 
 axes2[-1].axis('off')
 plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02, pad=0.01)
 plt.show()
+
+def rugosite_lisse(z,size):
+    z_lisse = gaussian_filter(z, size=size)
+    return np.std(z - z_lisse)
+for  size in taille_fenetre:
+    rugosite = rugosite_lisse(z, size=size)
+    print(f'Rugosité (écart-type de la différence entre le \n MNT et sa version lissée) avec une \n fenêtre de {size}x{size}')
