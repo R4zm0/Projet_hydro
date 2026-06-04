@@ -45,7 +45,7 @@ def gradient_evans(Z, s=1.0):
     def make_coeff(idx):
         def compute(window):
             z1,z2,z3,z4,z5,z6,z7,z8,z9 = window
-            A = (z1+z3+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
+            A = (z1+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
             B = (z1+z2+z3+z7+z8+z9)/(6*s**2) - (z4+z5+z6)/(3*s**2)
             C = (z3+z7-z1-z9)/(4*s**2)
             D = (z3+z6+z9-z1-z4-z7)/(6*s**2)
@@ -61,6 +61,49 @@ def gradient_evans(Z, s=1.0):
 
     coeffs = np.stack([A, B, C, Gx, Gy], axis=-1)  # (N, M, 5)
     return np.stack([Gx, Gy], axis=-1), coeffs
+
+def gradient_evans_methode2(Z, n=1):        #ici on se met sur un voisinage de 3x3, d'où n = 1 (vf np.arange), mais si la courbure est trop importante on peut prendre un n plus grand sinon la méthode des moindres carrées part un peu en n'importe quoi
+    size = 2*n+1
+
+    x = np.arange(-n, n+1, 1)
+    y = np.arange(-n, n+1, 1)
+    X, Y = np.meshgrid(x, y)
+
+    A = np.column_stack([                        #matrice de résolution pour la méthode des moindres carrées (identique pour tous)
+        X.ravel()**2,
+        Y.ravel()**2,
+        X.ravel() * Y.ravel(),
+        X.ravel(),
+        Y.ravel(),
+        np.ones(size**2)
+    ])
+
+    def moindre_carre(window):
+        coeffs, _, _, _ = np.linalg.lstsq(A, window, rcond=None)
+        return coeffs  # [a, b, c, d, e, f]      "coeff du repère local"
+
+    # Un appel par coefficient
+    def make_fit(idx):
+        def func(window):
+            coeffs, _, _, _ = np.linalg.lstsq(A, window, rcond=None)
+            return coeffs[idx]
+        return func
+    
+    a = generic_filter(Z, make_fit(0), size=size, mode='nearest')  # coeff x²
+    b = generic_filter(Z, make_fit(1), size=size, mode='nearest')  # coeff y²
+    c = generic_filter(Z, make_fit(2), size=size, mode='nearest')  # coeff xy
+    Gx = generic_filter(Z, make_fit(3), size=size, mode='nearest') # pente x
+    Gy = generic_filter(Z, make_fit(4), size=size, mode='nearest') # pente y
+    
+    coeffs = np.stack([a, b, c, Gx, Gy], axis=-1)
+    return np.stack([Gx, Gy], axis=-1), coeffs
+
+
+
+
+
+
+
 
 
 

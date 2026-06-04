@@ -10,6 +10,7 @@ import fonction_theoriques as ft
 import pente as p
 import visualisation as vis
 
+
 x = np.arange(0, 101)
 y = np.arange(0, 101)
 X, Y = np.meshgrid(x, y)
@@ -49,5 +50,93 @@ vis.afficher_2D(X, Y, erreur_evans, ax=ax[2], title=stats_title('Evans', erreur_
                 Zname='Erreur [m/m]', cmap=cmap, norm=norm_commune, niveaux=False, colorbar=True)
 
 plt.suptitle('Erreurs ( Pente Analytique - Pente Réelle ) pour la fonction double sinus  : normalisation partagée')
+plt.tight_layout()
+plt.show()
+
+#Terrain réel
+
+base = os.path.dirname(os.path.dirname(__file__))  # remonte au dossier PROJETHYDRO
+mnt = np.loadtxt(os.path.join(base, 'txt', 'reels', 'Morne_Rouge', 'morneRouge.txt'))
+
+x = np.arange(0, len(mnt[0]), 1)        #taille pour x : taille d'une sous liste qui fait une ligne
+y = np.arange(0, len(mnt), 1)       # nombre de lignes ou de sous liste 
+
+X, Y = np.meshgrid(x, y)
+
+G_reel_tpp        = p.gradient_tpp(mnt)
+pente_tpp    = p._safe_gradient_norm(G_reel_tpp[..., 0], G_reel_tpp[..., 1])
+
+G_reel_fcn        = p.gradient_fcn(mnt)
+pente_fcn    = p._safe_gradient_norm(G_reel_fcn[..., 0], G_reel_fcn[..., 1])
+
+G_reel_evans, _   = p.gradient_evans(mnt)
+pente_evans  = p._safe_gradient_norm(G_reel_evans[..., 0], G_reel_evans[..., 1])
+
+erreur_tpp_evans   = (pente_tpp   - pente_evans)[1:-1, 1:-1]
+erreur_fcn_tpp  = (pente_fcn   - pente_tpp)[1:-1, 1:-1]
+erreur_evans_fcn = (pente_evans - pente_fcn)[1:-1, 1:-1]
+
+#Affichage des erreurs entre méthode
+
+def stats_title(nom, e):
+    return f"{nom}\nμ={e.mean():.2e}  σ={e.std():.2e}"
+
+norm_commune = CenteredNorm(0)
+cmap = 'seismic'
+
+fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+
+vis.afficher_2D(X, Y, erreur_tpp_evans,   ax=ax[0], title=stats_title('TPP, evans',   erreur_tpp_evans),
+                Zname='Erreur [m/m]', cmap=cmap, norm=norm_commune, niveaux=False, colorbar=True)
+vis.afficher_2D(X, Y, erreur_fcn_tpp,   ax=ax[1], title=stats_title('FCN, TPP',   erreur_fcn_tpp),
+                Zname='Erreur [m/m]', cmap=cmap, norm=norm_commune, niveaux=False, colorbar=True)
+vis.afficher_2D(X, Y, erreur_evans_fcn, ax=ax[2], title=stats_title('Evans, FCN', erreur_evans_fcn),
+                Zname='Erreur [m/m]', cmap=cmap, norm=norm_commune, niveaux=False, colorbar=True)
+
+plt.suptitle('Erreurs des différentes méthodes de pente pour la carte Morne Rouge  : normalisation partagée')
+plt.tight_layout()
+plt.show()
+
+#Affichage des histogrammes de diff entre méthodes
+
+fig, ax = plt.subplots(1, 3, figsize=(15, 5))
+
+vis.afficher_histogramme(erreur_tpp_evans, ax=ax[0],
+                             title=f"tpp/evans ", Zname=f"Erreur [m]",
+                             bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
+vis.afficher_histogramme(erreur_fcn_tpp, ax=ax[1],
+                             title=f"fcn/tpp", Zname=f"Erreur [m]",
+                             bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
+vis.afficher_histogramme(erreur_evans_fcn, ax=ax[2],
+                             title=f"evans/fcn", Zname=f"Erreur [m]",
+                             bins=50, density=False, color="steelblue", edgecolor="white", alpha=0.8)
+
+plt.show()
+
+#comparaison des 2 méthodes de evans sur le terrain de la Morne Rouge 
+
+base = os.path.dirname(os.path.dirname(__file__))  # remonte au dossier PROJETHYDRO
+mnt = np.loadtxt(os.path.join(base, 'txt', 'reels', 'Morne_Rouge', 'morneRouge.txt'))
+
+x = np.arange(0, len(mnt[0]), 1)        #taille pour x : taille d'une sous liste qui fait une ligne
+y = np.arange(0, len(mnt), 1)       # nombre de lignes ou de sous liste 
+
+X, Y = np.meshgrid(x, y)
+
+def stats_title(nom, e):
+    return f"{nom}\nμ={e.mean():.2e}  σ={e.std():.2e}"
+
+norm_commune = CenteredNorm(0)
+cmap = 'seismic'
+
+G_reel_evans_2, _   = p.gradient_evans_methode2(mnt)
+pente_evans2  = p._safe_gradient_norm(G_reel_evans_2[..., 0], G_reel_evans_2[..., 1])
+
+erreur_evans_diff_meth = (pente_evans - pente_evans2)[1:-1, 1:-1]
+print(erreur_evans_diff_meth)
+vis.afficher_2D(X, Y, erreur_evans_diff_meth, title=stats_title('evans',   erreur_evans_diff_meth),
+                Zname='Erreur [m]', norm=norm_commune,cmap=cmap, niveaux=False, colorbar=True)
+
+plt.suptitle('Erreurs des différentes méthodes pour evans pour la carte Morne Rouge  : normalisation partagée')
 plt.tight_layout()
 plt.show()
