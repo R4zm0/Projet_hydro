@@ -1,6 +1,7 @@
 import numpy as np
-from scipy.ndimage import convolve, generic_filter, gaussian_filter
+from scipy.ndimage import correlate, convolve, generic_filter, gaussian_filter
 
+ 
 
 echelle = 1.0  # échelle spatiale (m/pixel) pour les gradients
 
@@ -87,44 +88,44 @@ def _bpi_func(center_idx):
         return center - np.mean(neighbors) if len(neighbors) > 0 else 0.0
     return func
  
- """
-BPI (Bathymetric/Topographic Position Index) — implémentation par convolution.
- 
-BPI = z_centre - mean(z_voisinage)
- 
-Avantages par rapport à generic_filter :
-  - Chaque passe est une convolution C-optimisée → 100-1000x plus rapide.
-  - Gestion correcte des NaN (pixels invalides ignorés dans la moyenne).
-  - Validations explicites des paramètres.
-"""
- 
-import numpy as np
-from scipy.ndimage import convolve
- 
- 
+    """
+    BPI (Bathymetric/Topographic Position Index) — implémentation par convolution.
+    
+    BPI = z_centre - mean(z_voisinage)
+    
+    Avantages par rapport à generic_filter :
+    - Chaque passe est une convolution C-optimisée → 100-1000x plus rapide.
+    - Gestion correcte des NaN (pixels invalides ignorés dans la moyenne).
+    - Validations explicites des paramètres.
+    """
+    
+
 # =============================================================================
 # Helper interne
 # =============================================================================
- 
+# =============================================================================
+# Helper interne
+# =============================================================================
+
 def _bpi_from_footprint(z: np.ndarray, footprint: np.ndarray,
                         mode: str = 'nearest') -> np.ndarray:
     """
     Calcule le BPI à partir d'un footprint (centre = 0).
- 
+
     BPI = z_centre - mean(z_voisins)
- 
-    La moyenne est calculée via deux convolutions pour gérer les NaN :
-      - sum_z  = convolve(z_sans_nan, w)   → somme des valeurs valides
-      - sum_v  = convolve(masque_valide, w) → nombre de voisins valides
+
+    La moyenne est calculée via deux corrélations pour gérer les NaN :
+      - sum_z  = correlate(z_sans_nan, w)   → somme des valeurs valides
+      - sum_v  = correlate(masque_valide, w) → nombre de voisins valides
       - mean   = sum_z / sum_v
- 
+
     Parameters
     ----------
     z         : MNT 2D (N, M), float. Peut contenir des NaN.
     footprint : kernel 2D, centre = 0. Les valeurs non-nulles désignent
                 les voisins à inclure dans la moyenne.
-    mode      : gestion des bords (voir scipy.ndimage.convolve).
- 
+    mode      : gestion des bords (voir scipy.ndimage.correlate).
+
     Returns
     -------
     bpi : ndarray float, même shape que z.
@@ -132,34 +133,31 @@ def _bpi_from_footprint(z: np.ndarray, footprint: np.ndarray,
     """
     z = np.asarray(z, dtype=float)
     w = np.asarray(footprint, dtype=float)
- 
+
     n_neighbors = w.sum()
     if n_neighbors == 0:
         raise ValueError(
             "Le footprint est vide : aucun voisin inclus dans la moyenne. "
             "Vérifier les paramètres (radius trop petit, secteur trop étroit…)."
         )
- 
+
     nan_mask = np.isnan(z)
- 
+
     if nan_mask.any():
-        # Convolution NaN-safe : les NaN contribuent 0 en valeur et 0 en comptage.
         z_fill = np.where(nan_mask, 0.0, z)
         valid  = (~nan_mask).astype(float)
- 
-        sum_z = convolve(z_fill, w, mode=mode)
-        sum_v = convolve(valid,  w, mode=mode)
- 
-        # Évite la division par zéro (voisinage 100 % NaN → NaN en sortie)
+
+        sum_z = correlate(z_fill, w, mode=mode)  # ← corrigé
+        sum_v = correlate(valid,  w, mode=mode)  # ← corrigé
+
         with np.errstate(invalid='ignore'):
             mean_nb = np.where(sum_v > 0, sum_z / sum_v, np.nan)
- 
+
         return np.where(nan_mask, np.nan, z - mean_nb)
     else:
-        # Pas de NaN : une seule convolution avec le kernel normalisé
-        mean_nb = convolve(z, w / n_neighbors, mode=mode)
+        mean_nb = correlate(z, w / n_neighbors, mode=mode)  # ← corrigé
         return z - mean_nb
- 
+
  
 # =============================================================================
 # BPI — voisinages fixes
