@@ -56,7 +56,7 @@ plt.show()
 #Terrain réel
 
 base = os.path.dirname(os.path.dirname(__file__))  # remonte au dossier PROJETHYDRO
-mnt = np.loadtxt(os.path.join(base, 'txt', 'reels', 'morneRouge.txt'))
+mnt = np.loadtxt(os.path.join(base, 'txt', 'reels', 'Morne_Rouge', 'morneRouge.txt'))
 
 x = np.arange(0, len(mnt[0]), 1)        #taille pour x : taille d'une sous liste qui fait une ligne
 y = np.arange(0, len(mnt), 1)       # nombre de lignes ou de sous liste 

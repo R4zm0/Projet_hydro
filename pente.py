@@ -59,7 +59,7 @@ def gradient_evans(Z, s=1.0):
     return np.stack([Gx, Gy], axis=-1), coeffs
 
 def gradient_evans_methode2(Z, n=1):        #ici on se met sur un voisinage de 3x3, d'où n = 1 (vf np.arange), mais si la courbure est trop importante on peut prendre un n plus grand sinon la méthode des moindres carrées part un peu en n'importe quoi
-    size = 2n+1
+    size = 2*n+1
 
     x = np.arange(-n, n+1, 1)
     y = np.arange(-n, n+1, 1)
