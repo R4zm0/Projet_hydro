@@ -45,7 +45,7 @@ def gradient_evans(Z, s=1.0):
     def make_coeff(idx):
         def compute(window):
             z1,z2,z3,z4,z5,z6,z7,z8,z9 = window
-            A = (z1+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
+            A = (z1+z3+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
             B = (z1+z2+z3+z7+z8+z9)/(6*s**2) - (z4+z5+z6)/(3*s**2)
             C = (z3+z7-z1-z9)/(4*s**2)
             D = (z3+z6+z9-z1-z4-z7)/(6*s**2)

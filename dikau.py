@@ -135,6 +135,8 @@ def classer_mnt(kv, kh, kmin, kmax, slope,
     mat_dikau : np.ndarray (N, M) de type float
         Valeur entiere Dikau en chaque pixel (nan si non classe)
     """
+    # Pixels invalides (NaN dans les courbures) → classe nodata = np.nan
+    nan_mask  = (~np.isfinite(kv)) | (~np.isfinite(kh)) | (~np.isfinite(slope))
     mat_dikau = np.full(slope.shape, np.nan)
 
     flat  = slope < epsilon_p
