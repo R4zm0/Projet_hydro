@@ -10,7 +10,9 @@ import visualisation as vis
 import matplotlib.pyplot as plt
 
 X, Y, Z = load.load_z('txt/reels/bertheaume_z.txt')
+X2, Y2, Z2 = load.load_z('txt/reels/Morne_Rouge/morneRouge.txt')
 
+vis.afficher_2D(X2, Y2, Z2, title = "Terrain Morne Rouge")
 # --- Cas 2 : Basse Saint Pierre ---
 X_bsp, Y_bsp, Z_bsp = load.load_xyz_separes(
     'txt/reels/Basse_Saint_Pierre/x_basse_St_Pierre.txt',
