@@ -41,7 +41,7 @@ def calculer_courbures(Z, dx=1.0):
     fxx = 2 * A       # d2z/dx2
     fyy = 2 * B       # d2z/dy2
     fxy = C           # d2z/dxdy
-
+    
     p = np.maximum(fx**2 + fy**2, 1e-10)   # norme2 gradient (protege /0)
     q = p + 1
 
@@ -55,6 +55,6 @@ def calculer_courbures(Z, dx=1.0):
     kmin = -A - B - np.sqrt((A - B)**2 + C**2)
     kmax = -A - B + np.sqrt((A - B)**2 + C**2)
 
-    slope, _ = pente.slope_aspect(fx, fy)
+    slope, _ = pente._aspect(fx, fy)
 
     return kv, kh, kmin, kmax, slope, G
