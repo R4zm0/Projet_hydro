@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import fonction_theoriques as ft
 import pente
-from calcule_coubure import calculer_courbures
+from pente import calculer_courbures
 from dikau import Dikau, classer_mnt
 import visualisation as vis
 import visualisation_dikau as vd
