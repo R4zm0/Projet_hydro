@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.ndimage import correlate, convolve, generic_filter, gaussian_filter
+from scipy.ndimage import convolve, generic_filter, gaussian_filter, uniform_filter, correlate
 
  
 
@@ -425,13 +425,30 @@ def bpi_sector_adaptive(z: np.ndarray, aspect: np.ndarray,
 # 4. RUGOSITÉ # Pas testé, à modifier / verifier / compléter
 # =========================
 
-def roughness_std(z, size=3):
-    return generic_filter(z, np.std, size=size)
+def rugosite_std(z, size):
+    mean_z  = uniform_filter(z, size=size, mode='nearest')
+    mean_z2 = uniform_filter(z**2, size=size, mode='nearest')
+    return np.sqrt(np.maximum(mean_z2 - mean_z**2, 0))
 
+def rugosite_normale(pente, exposition, size):
+    theta = pente
+    phi = exposition
+    x = np.sin(theta) * np.cos(phi)
+    y = np.sin(theta) * np.sin(phi)
+    z_comp = np.cos(theta)
+    noyau=np.ones((size,size))
+    sum_x = convolve(x,noyau, mode='reflect')
+    sum_y = convolve(y, noyau, mode='reflect')
+    sum_z = convolve(z_comp, noyau, mode='reflect')
+    n=size*size
+    r = np.sqrt(sum_x**2 + sum_y**2 + sum_z**2)
+    return 1 - r / n
 
-def roughness_tpi(z, sigma=1.0):
-    smooth = gaussian_filter(z, sigma=sigma)
-    return np.std(z - smooth)
+#différence de rugosite entre le MNT et sa version lissée
+def rugosite_lisse(z, size):
+    z_lisse = gaussian_filter(z, sigma=size/2)
+    residu = z - z_lisse
+    return rugosite_std(residu, size)   
 
 
 def roughness_normals(slope, aspect, size=3):
@@ -504,7 +521,7 @@ def calculer_courbures(Z, dx=1.0):
     kmin = -A - B - np.sqrt((A - B)**2 + C**2)
     kmax = -A - B + np.sqrt((A - B)**2 + C**2)
 
-    slope, _ = _aspect(fx, fy)
+    slope = _safe_gradient_norm(fx, fy)
 
     return kv, kh, kmin, kmax, slope, G
 
@@ -552,18 +569,9 @@ def calculer_courbures_evans2(Z, n=1):
     kmin = -A - B - np.sqrt((A - B)**2 + C**2)
     kmax = -A - B + np.sqrt((A - B)**2 + C**2)
 
-    slope, _ = _aspect(fx, fy)
+    slope = _safe_gradient_norm(fx, fy)
 
     return kv, kh, kmin, kmax, slope, G
 
 
-def principal_curvatures(coeffs):
-    A = coeffs[...,0]
-    B = coeffs[...,1]
-    C = coeffs[...,2]
-
-    kmin = -A - B - np.sqrt((A - B)**2 + C**2)
-    kmax = -A - B + np.sqrt((A - B)**2 + C**2)
-
-    return kmin, kmax
 

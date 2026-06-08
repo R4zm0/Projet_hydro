@@ -39,7 +39,7 @@ G_th = fn_grad(X, Y)
 sl = slice(1, -1)
 Zr = Z[sl, sl];  Xr = X[sl, sl];  Yr = Y[sl, sl]
 G_th_r = G_th[sl, sl]
-slope_th, aspect_th = pente.slope_aspect(G_th_r[..., 0], G_th_r[..., 1])
+slope_th, aspect_th = pente._aspect(G_th_r[..., 0], G_th_r[..., 1])
 ext = (Xr.min(), Xr.max(), Yr.min(), Yr.max())
 
 def diff_angle(a, b):
@@ -100,7 +100,7 @@ for sigma in SIGMAS:
         G_ev_b          = G_ev_b[sl, sl]
 
         for nom, G in [("TPP", G_tpp_b), ("FCN", G_fcn_b), ("Evans", G_ev_b)]:
-            sl_b, asp_b = pente.slope_aspect(G[..., 0], G[..., 1])
+            sl_b, asp_b = pente._aspect(G[..., 0], G[..., 1])
             mc[nom]["slopes"] [k] = sl_b
             mc[nom]["aspects"][k] = asp_b
 

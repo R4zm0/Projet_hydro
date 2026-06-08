@@ -11,17 +11,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import fonction_theoriques as ft
 import pente
-from calcule_coubure import calculer_courbures
 from dikau import Dikau, classer_mnt
 import visualisation as vis
 import visualisation_dikau as vd
-
+import XY_txt_loader as xy_loader
 # ─────────────────────────────────────────────
 TERRAIN       = "reel"
 FICHIER_REEL  = "morneRouge.txt"
 RESOL         = 1.0
-EPSILON_P = 0.08    # au lieu de 2e-3
-EPSILON_C = 0.5     # au lieu de 2e-2
+EPSILON_P = 0.9   # Eon
+EPSILON_C = 0.1   # au lieu de 2e-2
 # ─────────────────────────────────────────────
 
 # ===========================================================================
@@ -29,7 +28,7 @@ EPSILON_C = 0.5     # au lieu de 2e-2
 # ===========================================================================
 
 if TERRAIN == "reel":
-    Z     = np.loadtxt(FICHIER_REEL)
+    X,Y,Z     = xy_loader.load_z(f"txt/reels/Morne_Rouge/{FICHIER_REEL}", pas=RESOL)
     titre = "Morne Rouge"
 else:
     N = 101
@@ -45,17 +44,17 @@ else:
     Z     = fn_z(X_tmp, Y_tmp)
     titre = TERRAIN
 
-N_rows, N_cols = Z.shape
-x = np.arange(N_cols) * RESOL
-y = np.arange(N_rows) * RESOL
-X, Y = np.meshgrid(x, y)
+    N_rows, N_cols = Z.shape
+    x = np.arange(N_cols) * RESOL
+    y = np.arange(N_rows) * RESOL
+    X, Y = np.meshgrid(x, y)
 
 # ===========================================================================
 # CALCULS
 # ===========================================================================
 
 print("Calcul des courbures...")
-kv, kh, kmin, kmax, slope, G = calculer_courbures(Z, dx=RESOL)
+kv, kh, kmin, kmax, slope, G = pente.calculer_courbures(Z, dx=RESOL)
 
 print("Classification Dikau...")
 mat_dikau = classer_mnt(kv, kh, kmin, kmax, slope,
@@ -70,7 +69,7 @@ for x_cls in Dikau:
         print(f"  {x_cls.name:20s} : {cnt:5d} ({100*cnt/total:.1f}%)")
 
 print("Calcul des courbures...")
-kv, kh, kmin, kmax, slope, G = calculer_courbures(Z, dx=RESOL)
+kv, kh, kmin, kmax, slope, G = pente.calculer_courbures(Z, dx=RESOL)
 
 # --- DIAGNOSTIC SEUILS ---
 print(f"slope  : moy={slope.mean():.4f}  std={slope.std():.4f}")

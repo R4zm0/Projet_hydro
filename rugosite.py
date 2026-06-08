@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.ndimage import convolve, generic_filter, gaussian_filter
+from scipy.ndimage import convolve, generic_filter, gaussian_filter, uniform_filter
 import pente as p
 
 taille_fenetre = [3, 5, 7, 9, 11, 13, 15]
@@ -8,9 +8,15 @@ taille_fenetre = [3, 5, 7, 9, 11, 13, 15]
 z = np.loadtxt('txt/reels/bertheaume_z.txt')
 print(z.shape)
 
+
+# def rugosite_std(z, size):
+#     ecarttype = generic_filter(z, np.nanstd, size=size) 
+#     return ecarttype
+
 def rugosite_std(z, size):
-    ecarttype = generic_filter(z, np.nanstd, size=size) 
-    return ecarttype
+    mean_z  = uniform_filter(z, size=size, mode='nearest')
+    mean_z2 = uniform_filter(z**2, size=size, mode='nearest')
+    return np.sqrt(np.maximum(mean_z2 - mean_z**2, 0))
 
 fig1, axes1 = plt.subplots(2, 4, figsize=(16, 8))
 axes1 = axes1.flatten()
@@ -60,8 +66,7 @@ plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02
 def rugosite_lisse(z, size):
     z_lisse = gaussian_filter(z, sigma=size/2)
     residu = z - z_lisse
-    ecarttype_local = generic_filter(residu, np.nanstd, size=size) 
-    return ecarttype_local
+    return rugosite_std(residu, size)   
 
 fig3, axes3 = plt.subplots(2, 4, figsize=(16, 8))
 axes3 = axes3.flatten()
