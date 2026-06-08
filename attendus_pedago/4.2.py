@@ -78,8 +78,6 @@ erreur_evans_fcn = (pente_evans - pente_fcn)[1:-1, 1:-1]
 
 #Affichage des erreurs entre méthode
 
-def stats_title(nom, e):
-    return f"{nom}\nμ={e.mean():.2e}  σ={e.std():.2e}"
 
 norm_commune = CenteredNorm(0)
 cmap = 'seismic'
