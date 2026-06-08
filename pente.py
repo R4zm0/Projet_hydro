@@ -527,7 +527,7 @@ def calculer_courbures_evans2(Z, n=1):
     slope : pente ||grad z||
     G     : gradient Evans (N, M, 2)
     """
-    G, coeffs = pente.gradient_evans_methode2(Z, n=n)
+    G, coeffs = gradient_evans_methode2(Z, n=n)
 
     A  = coeffs[..., 0]
     B  = coeffs[..., 1]
@@ -552,7 +552,7 @@ def calculer_courbures_evans2(Z, n=1):
     kmin = -A - B - np.sqrt((A - B)**2 + C**2)
     kmax = -A - B + np.sqrt((A - B)**2 + C**2)
 
-    slope, _ = pente.slope_aspect(fx, fy)
+    slope, _ = _aspect(fx, fy)
 
     return kv, kh, kmin, kmax, slope, G
 
