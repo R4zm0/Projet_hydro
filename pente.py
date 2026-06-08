@@ -45,7 +45,7 @@ def gradient_evans(Z, s=1.0):
     def make_coeff(idx):
         def compute(window):
             z1,z2,z3,z4,z5,z6,z7,z8,z9 = window
-            A = (z1+z3+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
+            A = (z1+z3+z4+z6+z7+z9)/(6*s**2) - (z2+z5+z8)/(3*s**2)
             B = (z1+z2+z3+z7+z8+z9)/(6*s**2) - (z4+z5+z6)/(3*s**2)
             C = (z3+z7-z1-z9)/(4*s**2)
             D = (z3+z6+z9-z1-z4-z7)/(6*s**2)
@@ -264,7 +264,7 @@ def _sector_footprint(radius: int, angle_center: float,
     dist2 = x**2 + y**2
  
     # arctan2(-y, x) : convention image (y↓) → convention trigonométrique (y↑)
-    angles = np.arctan2(-y, x)
+    angles = np.arctan2(y, x)
     half   = angle_width / 2.0
     diff   = (angles - angle_center + np.pi) % (2 * np.pi) - np.pi
  
@@ -316,7 +316,7 @@ def bpi_sector_adaptive(z: np.ndarray, aspect: np.ndarray,
                         angle_width: float = np.pi / 2,
                         mode: str = 'nearest',
                         n_bins: int = 72,
-                        aspect_convention: str = 'geo') -> np.ndarray:
+                        aspect_convention: str = 'bearing_rad') -> np.ndarray:
     """
     BPI en secteur orienté pixel par pixel selon l'aspect local.
  
@@ -335,10 +335,17 @@ def bpi_sector_adaptive(z: np.ndarray, aspect: np.ndarray,
     n_bins             : nombre de directions discrètes (défaut 72 → pas 5°).
                          Valeurs plus élevées = moins d'erreur angulaire,
                          mais plus de convolutions.
+        
+    en gros on peut pas calculer un footprint pour chaque angle possible
+    on dit on découpe alosrs 360° en nbins dans quel intervalle tombe l'exposition du pixel pour lui appliquer le footprint correspondant !
+                         
+
     aspect_convention  : format de l'aspect fourni :
-        'geo'     → degrés   [0, 360], Nord=0, sens horaire   (GDAL, GRASS, RichDEM…)
-        'geo_rad' → radians  [0, 2π],  Nord=0, sens horaire
-        'trig'    → radians  [-π, π],  Est=0,  sens antihoraire (numpy/scipy)
+    
+    'bearing_rad' → radians  (-π, π],  Nord=0, sens horaire  ← _aspect() de pente.py
+    'geo'         → degrés   [0, 360], Nord=0, sens horaire  (GDAL, GRASS, RichDEM…)
+    'geo_rad'     → radians  [0, 2π],  Nord=0, sens horaire
+    'trig'        → radians  (-π, π],  Est=0,  sens antihoraire (numpy brut)
  
     Returns
     -------
@@ -360,7 +367,14 @@ def bpi_sector_adaptive(z: np.ndarray, aspect: np.ndarray,
         )
  
     # --- Conversion vers la convention trigonométrique interne [-π, π] ---
-    if aspect_convention == 'geo':
+
+    if aspect_convention == 'bearing_rad':
+        # Relèvement en radians (-π, π], Nord=0, sens horaire  ← ce que _aspect produit A GARDER PAR DEFAUT
+        # Conversion → convention trig interne (Est=0, CCW)
+        asp = np.pi / 2.0 - aspect
+        asp = (asp + np.pi) % (2 * np.pi) - np.pi
+
+    elif aspect_convention == 'geo':
         # Degrés, Nord=0, horaire → radians, Est=0, antihoraire
         asp = np.deg2rad(aspect)
         asp = np.pi / 2.0 - asp
@@ -445,25 +459,102 @@ def roughness_normals(slope, aspect, size=3):
 # 5. COURBURES # Pas testé, à modifier / verifier / compléter/ c'est de la merde d' IA
 # =========================
 
-def curvatures(fx, fy, coeffs):
-    A = coeffs[...,0]
-    B = coeffs[...,1]
-    C = coeffs[...,2]
+def calculer_courbures(Z, dx=1.0):
+    """
+    Calcule les 4 courbures d'Evans en chaque pixel.
 
-    fxx = 2*A
-    fyy = 2*B
-    fxy = C
+    Parametres
+    ----------
+    Z  : np.ndarray (N, M)   MNT
+    dx : float               pas spatial (m/pixel)
 
-    p = fx**2 + fy**2
+    Retourne
+    --------
+    kv    : courbure verticale   (sujet eq.4)
+    kh    : courbure horizontale (sujet eq.5)
+    kmin  : courbure principale minimale (sujet eq.6) — zones plates
+    kmax  : courbure principale maximale (sujet eq.7) — zones plates
+    slope : pente ||grad z||
+    G     : gradient Evans (N, M, 2)
+    """
+
+    Z = np.where(np.isfinite(Z), Z, np.nan)  # Assurer que les NaN sont bien des NaN flottants
+    G, coeffs = gradient_evans(Z, s=dx)
+
+    A  = coeffs[..., 0]
+    B  = coeffs[..., 1]
+    C  = coeffs[..., 2]
+    fx = coeffs[..., 3]
+    fy = coeffs[..., 4]
+
+    fxx = 2 * A       # d2z/dx2
+    fyy = 2 * B       # d2z/dy2
+    fxy = C           # d2z/dxdy
+    
+    p = np.maximum(fx**2 + fy**2, 1e-10)   # norme2 gradient (protege /0)
     q = p + 1
 
-    eps = 1e-8
-    p = np.maximum(p, eps)
-
+    # Courbure verticale — sujet eq.4
     kv = -(fxx*fx**2 + 2*fxy*fx*fy + fyy*fy**2) / (p * np.sqrt(q**3))
+
+    # Courbure horizontale — sujet eq.5
     kh = -(fxx*fy**2 - 2*fxy*fx*fy + fyy*fx**2) / (p * np.sqrt(q))
 
-    return kv, kh
+    # Courbures principales — sujet eq.6 et 7 (utilisees quand pente = 0)
+    kmin = -A - B - np.sqrt((A - B)**2 + C**2)
+    kmax = -A - B + np.sqrt((A - B)**2 + C**2)
+
+    slope, _ = _aspect(fx, fy)
+
+    return kv, kh, kmin, kmax, slope, G
+
+
+def calculer_courbures_evans2(Z, n=1):
+    """
+    Calcule les 4 courbures d'Evans avec la méthode des moindres carrés en chaque pixel.
+
+    Parametres
+    ----------
+    Z  : np.ndarray (N, M)   MNT
+    dx : float               pas spatial (m/pixel)
+
+    Retourne
+    --------
+    kv    : courbure verticale   (sujet eq.4)
+    kh    : courbure horizontale (sujet eq.5)
+    kmin  : courbure principale minimale (sujet eq.6) — zones plates
+    kmax  : courbure principale maximale (sujet eq.7) — zones plates
+    slope : pente ||grad z||
+    G     : gradient Evans (N, M, 2)
+    """
+    G, coeffs = pente.gradient_evans_methode2(Z, n=n)
+
+    A  = coeffs[..., 0]
+    B  = coeffs[..., 1]
+    C  = coeffs[..., 2]
+    fx = coeffs[..., 3]
+    fy = coeffs[..., 4]
+
+    fxx = 2 * A       # d2z/dx2
+    fyy = 2 * B       # d2z/dy2
+    fxy = C           # d2z/dxdy
+
+    p = np.maximum(fx**2 + fy**2, 1e-10)   # norme2 gradient (protege /0)
+    q = p + 1
+
+    # Courbure verticale — sujet eq.4
+    kv = -(fxx*fx**2 + 2*fxy*fx*fy + fyy*fy**2) / (p * np.sqrt(q**3))
+
+    # Courbure horizontale — sujet eq.5
+    kh = -(fxx*fy**2 - 2*fxy*fx*fy + fyy*fx**2) / (p * np.sqrt(q))
+
+    # Courbures principales — sujet eq.6 et 7 (utilisees quand pente = 0)
+    kmin = -A - B - np.sqrt((A - B)**2 + C**2)
+    kmax = -A - B + np.sqrt((A - B)**2 + C**2)
+
+    slope, _ = pente.slope_aspect(fx, fy)
+
+    return kv, kh, kmin, kmax, slope, G
 
 
 def principal_curvatures(coeffs):

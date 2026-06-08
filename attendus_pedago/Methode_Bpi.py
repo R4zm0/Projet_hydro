@@ -19,7 +19,9 @@ base = os.path.dirname(os.path.dirname(__file__))  # remonte au dossier PROJETHY
 Z = np.loadtxt(os.path.join(base, 'txt', 'Sin_card.txt'))
 G = p.gradient_fcn(Z)
 ASP = p._aspect(G[...,0], G[...,1])
-vis.afficher_2D(X, Y, ASP, title='BPI', Zname='Exposition en radian mais pas randians', cmap='twilight', hillshade=True, niveaux=True, colorbar=True, cotes = True, n_levels=1)
+
+BPI = p.bpi_sector_adaptive(Z,ASP, aspect_convention = 'geo_rad', n_bins= 6, angle_width=np.pi/4)
+vis.afficher_2D(X, Y, BPI, title='BPI', Zname='Exposition en radian mais pas randians', cmap='viridis', hillshade=False, niveaux=True, colorbar=True, cotes = True, n_levels=1)
 
 plt.show()
 
