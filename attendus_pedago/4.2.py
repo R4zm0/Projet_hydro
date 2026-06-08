@@ -99,37 +99,47 @@ Xc_mr, Yc_mr = X_mr[sl, sl], Y_mr[sl, sl]   # grille rognée cohérente
 
 norm_mr = CenteredNorm(0)   # normalisation partagée pour cette figure
 
+series = [
+    ('TPP − Evans', erreur_tpp_evans),
+    ('FCN − TPP',   erreur_fcn_tpp),
+    ('Evans − FCN', erreur_evans_fcn),
+]
+
+# cartes d'erreur
 fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-vis.afficher_2D(Xc_mr, Yc_mr, erreur_tpp_evans, ax=ax[0],
-                title=stats_title('TPP − Evans', erreur_tpp_evans),
-                Zname='Erreur [m/m]', cmap=cmap, norm=norm_mr,
-                niveaux=False, colorbar=True)
-vis.afficher_2D(Xc_mr, Yc_mr, erreur_fcn_tpp,   ax=ax[1],
-                title=stats_title('FCN − TPP',   erreur_fcn_tpp),
-                Zname='Erreur [m/m]', cmap=cmap, norm=norm_mr,
-                niveaux=False, colorbar=True)
-vis.afficher_2D(Xc_mr, Yc_mr, erreur_evans_fcn, ax=ax[2],
-                title=stats_title('Evans − FCN', erreur_evans_fcn),
-                Zname='Erreur [m/m]', cmap=cmap, norm=norm_mr,
-                niveaux=False, colorbar=True)
+for col, (label, erreur) in enumerate(series):
+    vis.afficher_2D(Xc_mr, Yc_mr, erreur, ax=ax[col],
+                    title=stats_title(label, erreur),
+                    Zname='Erreur [m/m]', cmap=cmap, norm=norm_mr,
+                    niveaux=False, colorbar=True)
 plt.suptitle('Différences inter-méthodes — Morne Rouge\nnormalisation partagée')
 plt.tight_layout()
 
-# histogrammes des différences inter-méthodes
+# histogrammes individuels
 fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-vis.afficher_histogramme(erreur_tpp_evans, ax=ax[0],
-                         title='TPP − Evans', Zname='Erreur [m/m]',
-                         bins=50, density=False,
-                         color='steelblue', edgecolor='white', alpha=0.8)
-vis.afficher_histogramme(erreur_fcn_tpp,   ax=ax[1],
-                         title='FCN − TPP',   Zname='Erreur [m/m]',
-                         bins=50, density=False,
-                         color='steelblue', edgecolor='white', alpha=0.8)
-vis.afficher_histogramme(erreur_evans_fcn, ax=ax[2],
-                         title='Evans − FCN', Zname='Erreur [m/m]',
-                         bins=50, density=False,
-                         color='steelblue', edgecolor='white', alpha=0.8)
+for col, (label, erreur) in enumerate(series):
+    vis.afficher_histogramme(erreur, ax=ax[col],
+                             title=label, Zname='Erreur [m/m]',
+                             bins=50, density=False,
+                             color='steelblue', edgecolor='white', alpha=0.8)
 plt.suptitle('Histogrammes des différences inter-méthodes — Morne Rouge')
+plt.tight_layout()
+
+# histogrammes superposés (comparaison directe des formes)
+from matplotlib.patches import Patch
+COULEURS = {'TPP − Evans': '#E07030', 'FCN − TPP': '#2E8B57', 'Evans − FCN': '#1A5EA8'}
+
+fig, ax = plt.subplots(figsize=(8, 5))
+for label, erreur in series:
+    vis.afficher_histogramme(erreur, ax=ax,
+                             title='Distributions des erreurs inter-méthodes — Morne Rouge',
+                             Zname='Erreur [m/m]',
+                             bins=50, density=True,
+                             color=COULEURS[label], edgecolor='none', alpha=0.5,
+                             show_moyenne=False, show_mediane=False, show_std=False,
+                             show_min=False, show_max=False)
+ax.legend(handles=[Patch(facecolor=c, alpha=0.6, label=l)
+                   for l, c in COULEURS.items()])
 plt.tight_layout()
 
 # ─────────────────────────────────────────────────────────────────────────────
