@@ -26,7 +26,7 @@ plt.colorbar(axes1[0].images[0], ax=axes1, orientation='vertical', fraction=0.02
 
 
 
-gradients = p.gradient_fcn(z)
+gradients, coeffs = p.gradient_evans_methode2(z)
 pente = p._safe_gradient_norm(gradients[..., 0], gradients[..., 1])
 exposition = p._aspect(gradients[..., 0], gradients[..., 1])
 
@@ -56,23 +56,23 @@ for index, size in enumerate(taille_fenetre):
 axes2[-1].axis('off')
 plt.colorbar(axes2[0].images[0], ax=axes2, orientation='vertical', fraction=0.02, pad=0.01)
 
-#différence de ruentre le MNT et sa version lissée
-def rugosite_lisse(z,size):
-    z_lisse = gaussian_filter(z,  sigma=size/2)
-    return np.std(z - z_lisse)
+#différence de rugosite entre le MNT et sa version lissée
+def rugosite_lisse(z, size):
+    z_lisse = gaussian_filter(z, sigma=size/2)
+    residu = z - z_lisse
+    ecarttype_local = generic_filter(residu, np.nanstd, size=size) 
+    return ecarttype_local
 
 fig3, axes3 = plt.subplots(2, 4, figsize=(16, 8))
 axes3 = axes3.flatten()
-for  index, size in enumerate(taille_fenetre):
+for index, size in enumerate(taille_fenetre):
     rugosite = rugosite_lisse(z, size=size)
     ax = axes3[index]
     ax.imshow(rugosite, cmap='viridis')
     ax.set_title(f'Rugosité (différence entre\n MNT et MNT lissé) \n fenêtre de {size}x{size}')
 
 axes3[-1].axis('off')
-plt.colorbar(axes3[0].images[0], ax=axes3, orientation='vertical', fraction=0.02, pad=0.01)
-
+plt.colorbar(axes3[0].images[0], ax=axes3, orientation='vertical', fraction=0.02, pad=0.01, shrink=0.7)
 
 plt.show()
-
 
