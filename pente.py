@@ -504,7 +504,7 @@ def calculer_courbures(Z, dx=1.0):
     kmin = -A - B - np.sqrt((A - B)**2 + C**2)
     kmax = -A - B + np.sqrt((A - B)**2 + C**2)
 
-    slope, _ = _aspect(fx, fy)
+    slope = _aspect(fx, fy)
 
     return kv, kh, kmin, kmax, slope, G
 
