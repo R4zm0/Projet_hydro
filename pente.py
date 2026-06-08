@@ -552,7 +552,7 @@ def calculer_courbures_evans2(Z, n=1):
     kmin = -A - B - np.sqrt((A - B)**2 + C**2)
     kmax = -A - B + np.sqrt((A - B)**2 + C**2)
 
-    slope, _ = _aspect(fx, fy)
+    slope = _aspect(fx, fy)
 
     return kv, kh, kmin, kmax, slope, G
 
