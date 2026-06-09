@@ -89,11 +89,11 @@ def gradient_evans_methode2(Z, n=1):        #ici on se met sur un voisinage de 3
             return coeffs[idx]
         return func
     
-    a = generic_filter(Z, make_fit(0), size=size, mode='nearest')  # coeff x²
-    b = generic_filter(Z, make_fit(1), size=size, mode='nearest')  # coeff y²
-    c = generic_filter(Z, make_fit(2), size=size, mode='nearest')  # coeff xy
-    Gx = generic_filter(Z, make_fit(3), size=size, mode='nearest') # pente x
-    Gy = generic_filter(Z, make_fit(4), size=size, mode='nearest') # pente y
+    a = generic_filter(Z, make_fit(0), size=size, mode='constant', cval = np.nan)  # coeff x²
+    b = generic_filter(Z, make_fit(1), size=size, mode='constant', cval = np.nan)  # coeff y²
+    c = generic_filter(Z, make_fit(2), size=size, mode='constant', cval = np.nan)  # coeff xy
+    Gx = generic_filter(Z, make_fit(3), size=size, mode='constant', cval = np.nan ) # pente x
+    Gy = generic_filter(Z, make_fit(4), size=size, mode='constant', cval = np.nan) # pente y
     
     coeffs = np.stack([a, b, c, Gx, Gy], axis=-1)
     return np.stack([Gx, Gy], axis=-1), coeffs
