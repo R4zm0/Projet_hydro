@@ -53,9 +53,9 @@ else:
     X, Y = np.meshgrid(x, y)
 
 def classer_mnt_bpi(Z, n=1, bpi_radius=5, rug_size=3,
-                    PENTE_FAIBLE=5, PENTE_MOYENNE=15,
-                    BPI_NEG=-0.3, BPI_POS=0.3,
-                    RUG_FAIBLE=0.05, RUG_FORTE=0.15):
+                    PENTE_FAIBLE=4, PENTE_MOYENNE=15,
+                    BPI_NEG=-0.2, BPI_POS=0.9,
+                    RUG_FAIBLE=0.05, RUG_FORTE=0.11):
     """
     Classification morphologique à partir du MNT brut.
     Calcule en interne la pente, le BPI et la rugosité.
@@ -70,13 +70,18 @@ def classer_mnt_bpi(Z, n=1, bpi_radius=5, rug_size=3,
     # --- 2. BPI (secteur adaptatif) ---
     bpi = pente.bpi_sector_adaptive(Z, aspect, radius=bpi_radius)
 
+
     # Normalisation du BPI entre -1 et 1
     bpi_std = np.nanstd(bpi)
     if bpi_std > 0:
         bpi = bpi / bpi_std
 
     # --- 3. Rugosité ---
-    rug = pente.roughness_normals(slope_rad, aspect, size=rug_size)
+    rug = pente.rugosite_lisse(Z, size=rug_size)
+    print(rug)
+    for nom, tab in [("Pente (deg)", slope_deg), ("BPI (normalisé)", bpi), ("Rugosité", rug)]:
+        q1, q3 = np.nanpercentile(tab, [25, 75])
+        print(f"{nom:18s} Q1={q1:8.4f}  Q3={q3:8.4f}")
 
     # --- 4. Masques ---
     p_f = slope_deg < PENTE_FAIBLE
@@ -147,7 +152,7 @@ N = vmax - vmin + 1
 noms_presents = noms[vmin-1 : vmax]
 
 colors = [
-    '#000080',  #  1 - FLAT_PLAIN       - marine
+    "#02021E",  #  1 - FLAT_PLAIN       - marine
     '#00008B',  #  2 - FLAT_ROUGH       - bleu foncé
     '#0000CD',  #  3 - FLAT_DEPRESSION  - bleu moyen
     '#4169E1',  #  4 - FLAT_MOUND       - bleu royal
