@@ -304,3 +304,59 @@ def afficher_histogramme(Z, ax=None, title="Histogramme des profondeurs", Zname=
     ax.grid(True, alpha=0.3)
 
     return fig, ax
+
+
+def afficher_3D_relief(X, Y, Z, factor=8, cmap="gist_earth",
+                       Zname="Profondeur [m]", show_edges=False,
+                       ligne_coupe=None, plotter=None):
+    """
+    MNT en 3D *brut* via PyVista (rotation fluide, GPU).
+    Aucune interpolation : 1 quad par maille, sommets = pixels du MNT.
+
+    factor      : exagération verticale (plus grand = relief plus marqué)
+    show_edges  : True = trace la grille des mailles (look pixelisé)
+    ligne_coupe : index de rangée à surligner en rouge (None = aucune)
+    plotter     : pv.Plotter existant (subplots) ; créé si None
+
+    NE FAIT PAS .show() — on l'appelle dans le script (comme la règle plt.show).
+    """
+    import pyvista as pv   # lazy : visualisation reste importable sans pyvista
+
+    grid = pv.StructuredGrid(X, Y, Z)
+    grid["altitude"] = grid.points[:, 2]          # vraie profondeur (avant warp)
+    grid = grid.warp_by_scalar("altitude", factor=factor)
+
+    p = plotter if plotter is not None else pv.Plotter()
+    p.add_mesh(grid, scalars="altitude", cmap=cmap,
+               smooth_shading=False,               # facettes franches, zéro fonte
+               show_edges=show_edges,
+               scalar_bar_args={"title": Zname})
+
+    if ligne_coupe is not None:
+        amp = float(np.nanmax(Z) - np.nanmin(Z))
+        pts = np.column_stack([X[ligne_coupe, :], Y[ligne_coupe, :],
+                               Z[ligne_coupe, :] * (1 + factor) + amp * 0.02])
+        p.add_mesh(pv.lines_from_points(pts), color="red",
+                   line_width=4, render_lines_as_tubes=True)
+
+    p.add_axes()
+    return p
+
+
+def afficher_coupe(X, Y, Z, ligne, ax=None, color="steelblue"):
+    """
+    Profil transversal le long d'une rangée (coupe brute, points reliés).
+    Chaque marqueur = une valeur du MNT, segments droits (aucune spline) :
+    un ravin au pied d'une pente apparaît comme un décrochement net.
+    """
+    if ax is None:
+        fig, ax = plt.subplots()
+    else:
+        fig = ax.get_figure()
+
+    ax.plot(X[ligne, :], Z[ligne, :], '-o', ms=2, lw=1, color=color)
+    ax.set_title(f"Coupe transversale — rangée y = {Y[ligne, 0]:.0f} m")
+    ax.set_xlabel("x [m]")
+    ax.set_ylabel("profondeur [m]")
+    ax.grid(True, alpha=0.3)
+    return fig, ax

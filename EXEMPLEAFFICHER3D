@@ -1,0 +1,25 @@
+import matplotlib
+matplotlib.use("QtAgg")            # vraie fenêtre interactive (pip install pyqt6)
+import matplotlib.pyplot as plt
+
+import XY_txt_loader as load
+import visualisation as vis
+
+X, Y, Z = load.load_z("txt/reels/Morne_Rouge/morneRouge.txt")
+
+LIGNE  = 50      # rangée de la coupe
+FACTOR = 8       # exagération verticale
+
+# Fenêtre 1 : coupe transversale (matplotlib)
+fig, ax = plt.subplots(figsize=(9, 4))
+vis.afficher_coupe(X, Y, Z, ligne=LIGNE, ax=ax)
+plt.tight_layout()
+plt.show(block=False)              # s'affiche sans bloquer le script
+plt.pause(0.3)
+
+# Fenêtre 2 : relief 3D brut (PyVista) — la ligne rouge = la coupe ci-dessus
+p = vis.afficher_3D_relief(X, Y, Z, factor=FACTOR, show_edges=False,
+                           ligne_coupe=LIGNE)
+p.show()                           # bloque : tu tournes le relief ici
+
+plt.show()                         # rend la coupe interactive une fois la 3D fermée
